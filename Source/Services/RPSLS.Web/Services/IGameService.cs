@@ -12,5 +12,7 @@ namespace RPSLS.Web.Services
         ResultDto GameResult { get; set; }
         Task Play(string username, bool isTwitterUser);
         Task<IEnumerable<ChallengerDto>> Challengers();
+        Task<string> GetToken(string username);
+        Task<bool> CheckToken(string username);
     }
 }

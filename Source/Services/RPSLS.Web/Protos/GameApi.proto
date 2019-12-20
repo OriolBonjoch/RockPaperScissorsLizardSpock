@@ -36,7 +36,6 @@ enum Result
 	Challenger = 2;
 }
 
-
 message GameResponse {
 	string challenger = 1;
 	int32 challengerPick = 2;
@@ -45,4 +44,3 @@ message GameResponse {
 	Result result = 5;
 	bool IsValid = 6;
 }
-

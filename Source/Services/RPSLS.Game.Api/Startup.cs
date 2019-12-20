@@ -25,6 +25,7 @@ namespace RPSLS.Game.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMultiplayer(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddApplicationInsightsTelemetry();
             services.AddControllers();
@@ -56,6 +57,7 @@ namespace RPSLS.Game.Api
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<GameManagerService>();
+                endpoints.MapGrpcService<TokenManagerService>();
                 endpoints.MapControllers();
             });
         }

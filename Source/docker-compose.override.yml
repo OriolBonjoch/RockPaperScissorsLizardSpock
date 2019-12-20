@@ -56,10 +56,10 @@ services:
       - APPINSIGHTS_INSTRUMENTATIONKEY=
       - GameManager__Url=http://game.api:81/
       - GameManager__Grpc__GrpcOverHttp=true
-      - Authentication__Twitter__ConsumerKey=
-      - Authentication__Twitter__ConsumerSecret=
+      - Authentication__Twitter__ConsumerKey=fDju7VCm3uYPdAUrQpwWE1Zq9
+      - Authentication__Twitter__ConsumerSecret=0kgHQEdxRgXw4CLI5flRV7BvqubuQCICK8KQLaaAHH4OhjEmVC
     volumes:
-      - model-data:/app/wwwroot/model      
+      - model-data:/app/wwwroot/model
   modeluploader:
     ports:
       - "5110:80"

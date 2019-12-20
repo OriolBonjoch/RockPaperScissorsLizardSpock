@@ -10,20 +10,19 @@ using System.Threading.Tasks;
 
 namespace RPSLS.Web.Clients
 {
-    public class GameManagerClient : IGameManagerClient
+    public class GameManagerClient : BaseClient, IGameManagerClient
     {
         private readonly string _serverUrl;
-        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public GameManagerClient(IOptions<GameManagerSettings> settings, IHttpContextAccessor httpContextAccessor)
+        public GameManagerClient(IOptions<GameManagerSettings> settings, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _serverUrl = settings.Value.Url ?? throw new ArgumentNullException("Game Manager Url is null");
-            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ResultDto> Play(string challenger, string username, int pick, bool twitterLogged)
         {
-            var request = new GameRequest() {
+            var request = new GameRequest()
+            {
                 Challenger = challenger,
                 Username = username,
                 TwitterLogged = twitterLogged,
@@ -50,16 +49,6 @@ namespace RPSLS.Web.Clients
             var client = new GameManager.GameManagerClient(channel);
             var result = await client.GetChallengersAsync(new EmptyRequest(), GetRequestMetadata());
             return result.Challengers;
-        }
-
-        private Grpc.Core.Metadata GetRequestMetadata()
-        {
-            var metadata = new Grpc.Core.Metadata();
-            var routeAs = _httpContextAccessor.HttpContext.Request.Headers["azds-route-as"].ToString();
-            if (!String.IsNullOrEmpty(routeAs)) {
-                metadata.Add("azds-route-as", routeAs);
-            }
-            return metadata;
         }
     }
 }

@@ -5,9 +5,15 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Protos\GameApi.proto" />
+    <None Remove="Protos\TokenApi.proto" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <Protobuf Include="Protos\GameApi.proto" GrpcServices="Server" />
+    <Protobuf Include="Protos\TokenApi.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,6 +22,10 @@
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.3.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.9.5" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RPSLS.Game.Multiplayer\RPSLS.Game.Multiplayer.csproj" />
   </ItemGroup>
 
 
