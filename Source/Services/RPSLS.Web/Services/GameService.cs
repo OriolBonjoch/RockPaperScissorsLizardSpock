@@ -1,41 +1,64 @@
 ﻿using GameApi.Proto;
 using RPSLS.Web.Clients;
 using RPSLS.Web.Models;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace RPSLS.Web.Services
 {
-    public class GameService : IGameService
+    public abstract class GameService
     {
-        private readonly IGameManagerClient _gameManager;
-        private readonly ITokenManagerClient _tokenManager;
-        public GameService(IGameManagerClient gameManager, ITokenManagerClient tokenManager)
+        public GameService(IGameManagerClient gameManager)
         {
-            _gameManager = gameManager;
+            GameManager = gameManager;
+        }
+
+        public IGameManagerClient GameManager { get; private set; }
+        public int Pick { get; set; }
+        public string OpponentName { get; protected set; }
+        public ResultDto GameResult { get; set; }
+    }
+
+    public class MultiplayerGameService : GameService, IMultiplayerGameService
+    {
+        private readonly ITokenManagerClient _tokenManager;
+
+        public MultiplayerGameService(IGameManagerClient gameManager, ITokenManagerClient tokenManager) : base(gameManager)
+        {
             _tokenManager = tokenManager;
         }
 
-        public ChallengerDto Challenger { get; set; }
-        public int Pick { get; set; }
-        public ResultDto GameResult { get; set; }
+        public Task<string> GetToken(string username) => _tokenManager.CreateToken(username);
+
+        public Task WaitForMatchId(string username, Action<string, string> matchIdCallback) => _tokenManager.WaitMatch(username, matchIdCallback);
+    }
+
+    public class BotGameService : GameService, IBotGameService
+    {
+        private ChallengerDto _challenger;
+
+        public BotGameService(IGameManagerClient gameManager) : base(gameManager) { }
+
+        public ChallengerDto Challenger
+        {
+            get => _challenger;
+            set
+            {
+                _challenger = value;
+                OpponentName = value?.DisplayName ?? "-";
+            }
+        }
 
         public async Task Play(string username, bool isTwitterUser)
         {
-            GameResult = await _gameManager.Play(
+            GameResult = await GameManager.Play(
                Challenger.Name,
                username,
                Pick,
                isTwitterUser);
         }
 
-        public Task<IEnumerable<ChallengerDto>> Challengers()
-        {
-            return _gameManager.Challengers();
-        }
-
-        public Task<string> GetToken(string username) => _tokenManager.CreateToken(username);
-
-        public Task<bool> CheckToken(string username) => _tokenManager.Matched(username);
+        public Task<IEnumerable<ChallengerDto>> Challengers() => GameManager.Challengers();
     }
 }

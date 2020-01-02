@@ -2,10 +2,7 @@
 @page "/lobby"
 @attribute [Authorize]
 
-@using Microsoft.Extensions.Options
-@using System.Threading
-
-@inject IGameService Game
+@inject IMultiplayerGameService Game
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JsRuntime
@@ -20,16 +17,12 @@
                     <h2 class="subtitle">Share the link with your opponent</h2>
                 </div>
                 <input class="token-link" type="text" value="@TokenLink" readonly onclick="this.select();document.execCommand('copy');" />
+                <h2 class="wait-text">@Status</h2>
                 @if (Timeout)
                 {
-                    <h2 class="wait-text">queue cancelled, nobody joined.</h2>
                     <div class="custom-button">
                         <a class="custom-button-link" href="/challenger">Play against bots</a>
                     </div>
-                }
-                else
-                {
-                    <h2 class="wait-text">waiting opponent to join...</h2>
                 }
             </form>
         </div>
@@ -42,11 +35,10 @@
 
 @code
 {
-    private CancellationTokenSource _cancellationTokenSource;
-
     private string Token { get; set; }
     private string TokenLink { get; set; }
     public bool Timeout { get; set; }
+    public string Status { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -56,30 +48,38 @@
             NavigationManager.NavigateTo("/challenger");
         }
 
-        _cancellationTokenSource = new CancellationTokenSource();
         var username = state.User.Identity.Name;
         Token = await Game.GetToken(username);
         TokenLink = $"{NavigationManager.BaseUri}api/token/{Token}";
         Timeout = false;
+        Status = GetStatusText("WaitingForPlayers");
 
-        _ = WaitForToken(_cancellationTokenSource.Token, username);
+        _ = Game.WaitForMatchId(username, ProcessMatchId);
     }
 
-    private async Task WaitForToken(CancellationToken cancellationToken, string username)
+    private void ProcessMatchId(string matchId, string status)
     {
-        const int DelayWait = 2000;
-        const int MaxAttempts = 120000 / DelayWait;
-        int count = 0;
-        while (cancellationToken.IsCancellationRequested && count++ < MaxAttempts)
+        if (!string.IsNullOrWhiteSpace(matchId))
         {
-            await Task.Delay(DelayWait);
-            var hasMatch = await Game.CheckToken(username);
-            if (hasMatch)
-            {
-                NavigationManager.NavigateTo($"/battle?token={Token}");
-            }
-
-            Timeout = true;
+            NavigationManager.NavigateTo($"/battle/multiplayer/{matchId}");
+            return;
         }
+
+        Status = GetStatusText(status);
+        Timeout = status == "Canceled";
+        StateHasChanged();
+    }
+
+    private static string GetStatusText(string status)
+    {
+        return status switch
+        {
+            "WaitingForPlayers" => "waiting opponent to join...",
+            "WaitingForMatch" => "opponent found, prepare for the match!",
+            "WaitingForServer" => "opponent found, prepare for the match!",
+            "Canceled" => "request cancelled",
+            "Matched" => "starting match",
+            _ => status
+        };
     }
 }

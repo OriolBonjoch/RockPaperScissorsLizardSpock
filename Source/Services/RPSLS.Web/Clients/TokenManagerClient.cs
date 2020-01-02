@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using RPSLS.Web.Config;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TokenApi.Proto;
 
@@ -34,13 +35,21 @@ namespace RPSLS.Web.Clients
             await client.JoinAsync(request, GetRequestMetadata());
         }
 
-        public async Task<bool> Matched(string username)
+        public async Task<string> WaitMatch(string username, Action<string, string> matchIdCallback)
         {
+            var tokenSource = new CancellationTokenSource();
             var request = new MatchStatusRequest() { Username = username };
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new TokenManager.TokenManagerClient(channel);
-            var result = await client.MatchStatusAsync(request, GetRequestMetadata());
-            return string.IsNullOrWhiteSpace(result.MatchId);
+            using var stream = client.WaitMatch(request, GetRequestMetadata());
+            MatchStatusResponse response = null;
+            while (await stream.ResponseStream.MoveNext(tokenSource.Token))
+            {
+                response = stream.ResponseStream.Current;
+                matchIdCallback(response.MatchId, response.Status);
+            }
+
+            return response.MatchId;
         }
     }
 }

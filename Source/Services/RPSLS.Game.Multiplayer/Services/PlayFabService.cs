@@ -5,6 +5,7 @@ using PlayFab.ClientModels;
 using PlayFab.Internal;
 using RPSLS.Game.Multiplayer.Builders;
 using RPSLS.Game.Multiplayer.Config;
+using RPSLS.Game.Multiplayer.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,38 +18,37 @@ namespace RPSLS.Game.Multiplayer.Services
         private const string queueName = "rpsls_queue";
         private readonly ILogger<PlayFabService> _logger;
         private readonly MultiplayerSettings _settings;
-
-        private string _entityToken;
         private DateTime? _expiration;
 
         public PlayFabService(ILogger<PlayFabService> logger, IOptions<MultiplayerSettings> settings)
         {
             _logger = logger;
             _settings = settings.Value;
-
-            PlayFabSettings.staticSettings.TitleId = _settings.Title;
-            PlayFabSettings.staticSettings.DeveloperSecretKey = _settings.SecretKey;
-        }
-
-        protected string EntityToken
-        {
-            get
-            {
-                if (string.IsNullOrWhiteSpace(_entityToken))
-                    Initialize().RunSynchronously();
-
-                return _entityToken;
-            }
         }
 
         public async Task Initialize()
         {
+            PlayFabSettings.staticSettings.TitleId = _settings.Title;
+            PlayFabSettings.staticSettings.DeveloperSecretKey = _settings.SecretKey;
+
+            await ValidateToken();
+            await EnsureQueueExist();
+            await EnsureLeaderBoardExists();
+        }
+
+        protected string EntityToken { get; private set; }
+
+        public async Task ValidateToken()
+        {
             if (_expiration != null)
                 if (_expiration.HasValue && _expiration.Value > DateTime.UtcNow) return;
+            
+            if (!string.IsNullOrWhiteSpace(EntityToken))
+                return;
 
             var entityTokenRequest = new GetEntityTokenRequestBuilder().Build();
             var entityTokenResult = await Call(PlayFabAuthenticationAPI.GetEntityTokenAsync, entityTokenRequest);
-            _entityToken = entityTokenResult.EntityToken;
+            EntityToken = entityTokenResult.EntityToken;
             _expiration = entityTokenResult.TokenExpiration;
 
             var validateTokenRequest = new ValidateEntityTokenRequestBuilder()
@@ -58,14 +58,11 @@ namespace RPSLS.Game.Multiplayer.Services
 
             await Call(PlayFabAuthenticationAPI.ValidateEntityTokenAsync, validateTokenRequest);
             _logger.LogInformation($"PlayFab {_settings.Title} token validated.");
-
-            await EnsureQueueExist();
-            await EnsureLeaderBoardExists();
         }
 
         public async Task<string> CreateTicket(string username, string token)
         {
-            await Initialize();
+            await ValidateToken();
             var userEntity = await GetUserEntity(username);
             var cancelRequest = new CancelAllMatchmakingTicketsForPlayerRequestBuilder()
                 .WithEntity(userEntity.Id, userEntity.Type)
@@ -84,25 +81,35 @@ namespace RPSLS.Game.Multiplayer.Services
             return ticketResult.TicketId;
         }
 
-        public async Task<string> CheckTicketStatus(string username)
+        public async Task<MatchResult> CheckTicketStatus(string username, string ticketId = null)
         {
-            await Initialize();
+            await ValidateToken();
+            var result = new MatchResult() { TicketId = ticketId ?? string.Empty };
             var userEntity = await GetUserEntity(username);
-            var listTicketsRequest = new ListMatchmakingTicketsForPlayerRequestBuilder()
-                .WithQueue(queueName)
-                .WithEntity(userEntity.Id, userEntity.Type)
-                .Build();
+            if (string.IsNullOrWhiteSpace(ticketId))
+            {
+                var listTicketsRequest = new ListMatchmakingTicketsForPlayerRequestBuilder()
+                    .WithEntity(userEntity.Id, userEntity.Type)
+                    .WithQueue(queueName)
+                    .Build();
 
-            var listTickets = await Call(PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync, listTicketsRequest);
-            var ticketId = listTickets.TicketIds.First();
+                var listTickets = await Call(PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync, listTicketsRequest);
+                result.TicketId = listTickets?.TicketIds?.FirstOrDefault();
+            }
+            
+            if (string.IsNullOrWhiteSpace(result.TicketId)) return result;
 
             var awaitTicketRequest = new GetMatchmakingTicketRequestBuilder()
+                .WithUserContext(userEntity.Id, EntityToken)
                 .WithQueue(queueName)
-                .WithTicketId(ticketId)
+                .WithTicketId(result.TicketId)
                 .Build();
 
             var matchResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingTicketAsync, awaitTicketRequest);
-            return (matchResult?.Status != null && !matchResult.Status.StartsWith("Waiting")) ? matchResult.MatchId : null;
+            result.Status = matchResult?.Status ?? string.Empty;
+            result.MatchId = matchResult?.MatchId ?? string.Empty;
+            result.Finished = matchResult?.Status != null && !matchResult.Status.StartsWith("Waiting");
+            return result;
         }
 
         private async Task<EntityKey> GetUserEntity(string username)
@@ -125,13 +132,13 @@ namespace RPSLS.Game.Multiplayer.Services
                 .Build();
 
             var fetchQueueResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingQueueAsync, fetchQueueRequest);
-            if (fetchQueueResult != null)
+            if (fetchQueueResult == null)
             {
                 // Create if queue does not exist
                 var queueRequest = new SetMatchmakingQueueRequestBuilder()
                     .WithQueue(queueName, 2)
                     .WithTitleContext(_settings.Title, EntityToken)
-                    .WithQueueStringRule("TokenRule", "Token")
+                    .WithQueueStringRule("TokenRule", "Token", "random")
                     .Build();
 
                 await Call(PlayFabMultiplayerAPI.SetMatchmakingQueueAsync, queueRequest);
@@ -141,6 +148,9 @@ namespace RPSLS.Game.Multiplayer.Services
         private Task EnsureLeaderBoardExists() => Task.CompletedTask;
 
         private async Task<U> Call<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, T request) where U : PlayFabResultCommon
+            => (await CallWithError(playFabCall, request)).Result;
+
+        private async Task<PlayFabResult<U>> CallWithError<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, T request) where U : PlayFabResultCommon
         {
             var taskResult = await playFabCall(request, null, null);
             var apiError = taskResult.Error;
@@ -150,7 +160,7 @@ namespace RPSLS.Game.Multiplayer.Services
                 _logger.LogWarning($"Something went wrong with PlayFab API call.{Environment.NewLine}{detailedError}");
             }
 
-            return taskResult.Result;
+            return taskResult;
         }
     }
 }

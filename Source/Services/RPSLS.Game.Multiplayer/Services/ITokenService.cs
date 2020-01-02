@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using RPSLS.Game.Multiplayer.Models;
+using System.Threading.Tasks;
 
 namespace RPSLS.Game.Multiplayer.Services
 {
@@ -8,6 +9,6 @@ namespace RPSLS.Game.Multiplayer.Services
 
         Task JoinToken(string username, string token);
 
-        Task<string> GetMatch(string username);
+        Task<MatchResult> GetMatch(string username, string ticketId = null);
     }
 }

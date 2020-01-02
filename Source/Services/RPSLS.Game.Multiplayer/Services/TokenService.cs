@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using RPSLS.Game.Multiplayer.Config;
+using RPSLS.Game.Multiplayer.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace RPSLS.Game.Multiplayer.Services
             return token;
         }
 
-        public Task<string> GetMatch(string username) => _playFabService.CheckTicketStatus(username);
+        public Task<MatchResult> GetMatch(string username, string ticketId = null) => _playFabService.CheckTicketStatus(username, ticketId);
 
         public Task JoinToken(string username, string token) => _playFabService.CreateTicket(username, token);
 

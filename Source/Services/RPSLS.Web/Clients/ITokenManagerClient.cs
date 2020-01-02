@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace RPSLS.Web.Clients
 {
@@ -8,6 +9,6 @@ namespace RPSLS.Web.Clients
 
         Task Join(string username, string token);
 
-        Task<bool> Matched(string username);
+        Task<string> WaitMatch(string username, Action<string, string> matchIdCallback);
     }
 }

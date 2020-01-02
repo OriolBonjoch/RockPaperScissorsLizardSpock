@@ -49,7 +49,8 @@ namespace RPSLS.Web
             services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
             services.AddScoped<IGameManagerClient, GameManagerClient>();
             services.AddScoped<ITokenManagerClient, TokenManagerClient>();
-            services.AddScoped<IGameService, GameService>();
+            services.AddScoped<IBotGameService, BotGameService>();
+            services.AddScoped<IMultiplayerGameService, MultiplayerGameService>();
             services.AddScoped<SvgHelper>();
             services.AddScoped<BattleHelper>();
         }

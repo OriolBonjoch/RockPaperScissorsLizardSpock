@@ -17,7 +17,7 @@ namespace RPSLS.Game.Multiplayer.Builders
             return this;
         }
 
-        public SetMatchmakingQueueRequestBuilder WithQueueStringRule(string name, string path)
+        public SetMatchmakingQueueRequestBuilder WithQueueStringRule(string name, string path, string defaultValue)
         {
             var queueConfig = _product.MatchmakingQueue ?? new MatchmakingQueueConfig();
             var stringRules = queueConfig.StringEqualityRules ?? new List<StringEqualityRule>();
@@ -30,6 +30,7 @@ namespace RPSLS.Game.Multiplayer.Builders
                     Path = path,
                     Source = AttributeSource.User
                 },
+                DefaultAttributeValue = defaultValue,
                 Weight = 1
             };
 

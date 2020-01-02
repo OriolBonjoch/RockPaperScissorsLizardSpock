@@ -8,6 +8,7 @@ service TokenManager {
 	rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse);
 	rpc Join (JoinTokenRequest) returns (JoinTokenResponse);
 	rpc MatchStatus (MatchStatusRequest) returns (MatchStatusResponse);
+	rpc WaitMatch (MatchStatusRequest) returns (stream MatchStatusResponse);
 }
 
 message CreateTokenRequest {
@@ -32,4 +33,5 @@ message MatchStatusRequest {
 
 message MatchStatusResponse {
 	string matchId = 1;
+	string status = 2;
 }

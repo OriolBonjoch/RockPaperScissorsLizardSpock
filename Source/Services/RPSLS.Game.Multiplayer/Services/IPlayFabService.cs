@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using RPSLS.Game.Multiplayer.Models;
+using System.Threading.Tasks;
 
 namespace RPSLS.Game.Multiplayer.Services
 {
@@ -6,6 +7,6 @@ namespace RPSLS.Game.Multiplayer.Services
     {
         Task Initialize();
         Task<string> CreateTicket(string username, string token = "random");
-        Task<string> CheckTicketStatus(string username);
+        Task<MatchResult> CheckTicketStatus(string username, string ticketId = null);
     }
 }

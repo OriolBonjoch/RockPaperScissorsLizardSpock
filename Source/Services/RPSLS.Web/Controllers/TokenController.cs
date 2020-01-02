@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RPSLS.Web.Clients;
+using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace RPSLS.Web.Controllers
@@ -10,8 +13,8 @@ namespace RPSLS.Web.Controllers
     [Route("api/[controller]")]
     public class TokenController : Controller
     {
-        private const string redirectUri = "/battle";
-        private const string redirectFromTwitter = "/api/token/validate";
+        private const string TWITTER_BATTLE_URL = "/battle/multiplayer";
+        private const string TWITTER_URL = "/api/token/validate";
         private readonly ITokenManagerClient _tokenManager;
 
         public TokenController(ITokenManagerClient tokenManager)
@@ -20,30 +23,26 @@ namespace RPSLS.Web.Controllers
         }
 
         [HttpGet("{token}")]
-        public IActionResult JoinGame(string token)
+        public async Task<IActionResult> JoinGameAsync(string token)
         {
-            var redirect = $"{redirectFromTwitter}?token={token}&username={User.Identity.Name}";
-            return Challenge(new AuthenticationProperties { RedirectUri = redirect }, "Twitter");
+            var redirect = $"{TWITTER_URL}/{token}";
+            var claims = new List<Claim> {
+                new Claim(ClaimTypes.Name, "Paco")
+            };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(claimsIdentity);
+            await HttpContext.SignInAsync(principal);
+            return Redirect(redirect);
         }
 
-        [HttpGet("validate")]
-        public async Task<IActionResult> ValidateToken(string token, string username)
+        [HttpGet("validate/{token}")]
+        public async Task<IActionResult> ValidateToken(string token)
         {
-            const int DelayWait = 2000;
-            const int MaxAttempts = 120000 / DelayWait;
-            int count = 0;
+            var username = User.Identity.Name;
             await _tokenManager.Join(username, token);
-            while (count++ < MaxAttempts)
-            {
-                await Task.Delay(DelayWait);
-                var hasMatch = await _tokenManager.Matched(User.Identity.Name);
-                if (hasMatch)
-                {
-                    return Redirect(redirectUri);
-                }
-            }
-
-            return Redirect("/login/twitter");
+            var matchId = await _tokenManager.WaitMatch(username, (a, b) => { });
+            return Redirect($"{TWITTER_BATTLE_URL}/{matchId}");
         }
     }
 }
