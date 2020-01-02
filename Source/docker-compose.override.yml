@@ -56,6 +56,7 @@ services:
       - APPINSIGHTS_INSTRUMENTATIONKEY=
       - GameManager__Url=http://game.api:81/
       - GameManager__Grpc__GrpcOverHttp=true
+# TODO: remove twitter application credentials account
       - Authentication__Twitter__ConsumerKey=fDju7VCm3uYPdAUrQpwWE1Zq9
       - Authentication__Twitter__ConsumerSecret=0kgHQEdxRgXw4CLI5flRV7BvqubuQCICK8KQLaaAHH4OhjEmVC
     volumes:

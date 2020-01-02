@@ -52,13 +52,14 @@ namespace RPSLS.Game.Api.GrpcServices
         public override async Task WaitMatch(MatchStatusRequest request, IServerStreamWriter<MatchStatusResponse> responseStream, ServerCallContext context)
         {
             await _playFabService.Initialize();
-            var matchResult = await _tokenService.GetMatch(request.Username);
+            var username = request.Username;
+            var matchResult = await _tokenService.GetMatch(username);
             var response = new MatchStatusResponse() { MatchId = string.Empty, Status = matchResult.Status };
             while (!matchResult.Finished)
             {
                 await responseStream.WriteAsync(response);
                 await Task.Delay(_tokenSettings.TicketStatusWait);
-                matchResult = await _tokenService.GetMatch(request.Username, matchResult.TicketId);
+                matchResult = await _tokenService.GetMatch(username, matchResult.TicketId);
                 response = new MatchStatusResponse() { MatchId = string.Empty, Status = matchResult.Status };
             }
 

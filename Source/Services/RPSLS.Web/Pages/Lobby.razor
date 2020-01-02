@@ -35,6 +35,7 @@
 
 @code
 {
+    public string Username { get; set; }
     private string Token { get; set; }
     private string TokenLink { get; set; }
     public bool Timeout { get; set; }
@@ -48,13 +49,13 @@
             NavigationManager.NavigateTo("/challenger");
         }
 
-        var username = state.User.Identity.Name;
-        Token = await Game.GetToken(username);
+        Username = state.User.Identity.Name;
+        Token = await Game.GetToken(Username);
         TokenLink = $"{NavigationManager.BaseUri}api/token/{Token}";
         Timeout = false;
         Status = GetStatusText("WaitingForPlayers");
 
-        _ = Game.WaitForMatchId(username, ProcessMatchId);
+        _ = Game.WaitForMatchId(Username, ProcessMatchId);
     }
 
     private void ProcessMatchId(string matchId, string status)
@@ -74,11 +75,9 @@
     {
         return status switch
         {
-            "WaitingForPlayers" => "waiting opponent to join...",
-            "WaitingForMatch" => "opponent found, prepare for the match!",
-            "WaitingForServer" => "opponent found, prepare for the match!",
             "Canceled" => "request cancelled",
             "Matched" => "starting match",
+            _ when status.StartsWith("Waiting") => "waiting opponent to join...",
             _ => status
         };
     }

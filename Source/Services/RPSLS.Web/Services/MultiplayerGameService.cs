@@ -13,8 +13,13 @@ namespace RPSLS.Web.Services
             _tokenManager = tokenManager;
         }
 
+        public string MatchId { get; set; }
+
         public Task<string> GetToken(string username) => _tokenManager.CreateToken(username);
 
-        public Task WaitForMatchId(string username, Action<string, string> matchIdCallback) => _tokenManager.WaitMatch(username, matchIdCallback);
+        public async Task WaitForMatchId(string username, Action<string, string> matchIdCallback)
+        {
+            MatchId = await _tokenManager.WaitMatch(username, matchIdCallback);
+        }
     }
 }

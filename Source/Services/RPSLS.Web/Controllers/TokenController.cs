@@ -26,6 +26,8 @@ namespace RPSLS.Web.Controllers
         public async Task<IActionResult> JoinGameAsync(string token)
         {
             var redirect = $"{TWITTER_URL}/{token}";
+
+            //// TODO: remove code
             var claims = new List<Claim> {
                 new Claim(ClaimTypes.Name, "Paco")
             };
@@ -34,6 +36,7 @@ namespace RPSLS.Web.Controllers
             var principal = new ClaimsPrincipal(claimsIdentity);
             await HttpContext.SignInAsync(principal);
             return Redirect(redirect);
+            //return Challenge(new AuthenticationProperties { RedirectUri = redirect }, "Twitter");
         }
 
         [HttpGet("validate/{token}")]
