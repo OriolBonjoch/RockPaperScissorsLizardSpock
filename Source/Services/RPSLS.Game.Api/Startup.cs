@@ -30,7 +30,7 @@ namespace RPSLS.Game.Api
             services.AddApplicationInsightsTelemetry();
             services.AddControllers();
             services.AddHealthChecks();
-            services.AddScoped<ResultsDao>(sp => new ResultsDao(Configuration["cosmos-constr"], sp.GetService<ILoggerFactory>()));
+            services.AddScoped<IResultsDao>(sp => new ResultsDao(Configuration["cosmos-constr"], sp.GetService<ILoggerFactory>()));
             services.AddTransient<IGameService, GameService>();
             services.AddHttpClient("Challenger");
             services.AddGrpc();

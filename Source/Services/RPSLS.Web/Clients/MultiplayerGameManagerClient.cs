@@ -38,13 +38,12 @@ namespace RPSLS.Web.Clients
 
         public async Task<MatchFoundDto> PairingStatus(string username, Action<string, string> matchIdCallback)
         {
-            var tokenSource = new CancellationTokenSource();
             var request = new PairingStatusRequest() { Username = username };
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
             using var stream = client.PairingStatus(request, GetRequestMetadata());
             PairingStatusResponse response = null;
-            while (await stream.ResponseStream.MoveNext(tokenSource.Token))
+            while (await stream.ResponseStream.MoveNext(CancellationToken.None))
             {
                 response = stream.ResponseStream.Current;
                 matchIdCallback(response.MatchId, response.Status);

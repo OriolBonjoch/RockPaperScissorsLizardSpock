@@ -9,8 +9,8 @@ namespace RPSLS.Game.Api.Controllers
     [Route("api/[controller]")]
     public class GamesController : ControllerBase
     {
-        private readonly ResultsDao _resultDao;
-        public GamesController(ResultsDao resultDao)
+        private readonly IResultsDao _resultDao;
+        public GamesController(IResultsDao resultDao)
         {
             _resultDao = resultDao;
         }

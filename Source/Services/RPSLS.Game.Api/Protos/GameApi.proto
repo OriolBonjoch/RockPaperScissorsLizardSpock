@@ -50,7 +50,7 @@ message GameResponse {
 	string user = 3;
 	int32 userPick = 4;
 	Result result = 5;
-	bool IsValid = 6;
+	bool isValid = 6;
 }
 
 
@@ -78,13 +78,24 @@ message PairingStatusResponse {
 }
 
 message PickRequest {
-
+	string matchId = 1;
+	string username = 2;
+	int32 pick = 3;
 }
 
 message GameStatusRequest {
-
+	string matchId = 1;
+	string username = 2;
 }
 
 message GameStatusResponse {
+	string challenger = 1;
+	int32 challengerPick = 2;
+	string user = 3;
+	int32 userPick = 4;
 
+	Result result = 5;
+	bool isCancelled = 6;
+	bool isMaster = 7;
+	bool isFinished = 8;
 }
