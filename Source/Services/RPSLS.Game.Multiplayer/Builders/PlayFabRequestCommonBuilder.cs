@@ -2,7 +2,7 @@
 
 namespace RPSLS.Game.Multiplayer.Builders
 {
-    public class PlayFabRequestCommonBuilder<T, U> : Builder<U>
+    public class PlayFabRequestCommonBuilder<T, U> : BaseRequestBuilder<U>
         where T : PlayFabRequestCommonBuilder<T, U>
         where U : PlayFabRequestCommon, new()
     {

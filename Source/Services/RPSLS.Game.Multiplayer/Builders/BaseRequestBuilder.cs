@@ -1,9 +1,9 @@
 ﻿namespace RPSLS.Game.Multiplayer.Builders
 {
-    public class Builder<T> where T : new()
+    public class BaseRequestBuilder<T> where T : new()
     {
         protected T _product;
-        public Builder()
+        public BaseRequestBuilder()
         {
             _product = new T();
         }

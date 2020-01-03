@@ -50,14 +50,6 @@ namespace RPSLS.Game.Multiplayer.Services
             var entityTokenResult = await Call(PlayFabAuthenticationAPI.GetEntityTokenAsync, entityTokenRequest);
             EntityToken = entityTokenResult.EntityToken;
             _expiration = entityTokenResult.TokenExpiration;
-
-            var validateTokenRequest = new ValidateEntityTokenRequestBuilder()
-                .WithTitleContext(_settings.Title, EntityToken)
-                .WithToken(EntityToken)
-                .Build();
-
-            await Call(PlayFabAuthenticationAPI.ValidateEntityTokenAsync, validateTokenRequest);
-            _logger.LogInformation($"PlayFab {_settings.Title} token validated.");
         }
 
         public async Task<string> CreateTicket(string username, string token)
@@ -97,7 +89,10 @@ namespace RPSLS.Game.Multiplayer.Services
                 result.TicketId = listTickets?.TicketIds?.FirstOrDefault();
             }
 
-            if (string.IsNullOrWhiteSpace(result.TicketId)) return result;
+            if (string.IsNullOrWhiteSpace(result.TicketId))
+            {
+                return result;
+            }
 
             var matchTicketRequest = new GetMatchmakingTicketRequestBuilder()
                 .WithUserContext(userEntity.Id, EntityToken)
@@ -159,10 +154,7 @@ namespace RPSLS.Game.Multiplayer.Services
 
             var profileResult = await Call(PlayFabProfilesAPI.GetProfileAsync, getProfileRequest);
             var username = profileResult?.Profile?.DisplayName;
-            if (!string.IsNullOrWhiteSpace(username))
-            {
-                return username;
-            }
+            if (!string.IsNullOrWhiteSpace(username)) return username;
 
             var playFabId = profileResult.Profile.Lineage.MasterPlayerAccountId;
             var getAccountRequest = new GetAccountInfoRequestBuilder()

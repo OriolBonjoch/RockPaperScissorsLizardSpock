@@ -25,9 +25,9 @@ namespace RPSLS.Game.Multiplayer.Services
             return token;
         }
 
-        public Task<MatchResult> GetMatch(string username, string ticketId = null) => _playFabService.CheckTicketStatus(username, ticketId);
-
         public Task JoinToken(string username, string token) => _playFabService.CreateTicket(username, token);
+
+        public async Task<MatchResult> GetMatch(string username, string ticketId = null) => await _playFabService.CheckTicketStatus(username, ticketId);
 
         private string GenerateToken()
         {

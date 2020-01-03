@@ -25,10 +25,10 @@ namespace RPSLS.Game.Api.Data
         public async Task CreateMatch(string matchId, string username, string challenger)
         {
             var dto = new MatchDto();
-            dto.PlayerName = username;
-            dto.PlayFabMatchId = matchId;
             dto.Challenger.Name = challenger;
             dto.Challenger.Type = "human";
+            dto.PlayerName = username;
+            dto.PlayFabMatchId = matchId;
             if (_constr == null)
             {
                 _logger.LogInformation("+++ Cosmos constr is null. Doc that would be written is:");

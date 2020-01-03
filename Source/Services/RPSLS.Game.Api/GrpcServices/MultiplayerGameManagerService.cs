@@ -34,7 +34,7 @@ namespace RPSLS.Game.Api.GrpcServices
             if (_tokenSettings.TicketStatusWait < 60000 / FREE_TIER_MAX_REQUESTS)
             {
                 _logger.LogWarning($"PlayFab free tier limits the Get Matchmaking Ticket requests to a max of {FREE_TIER_MAX_REQUESTS} per minute. " +
-                    $"A MatchmakingRateLimitExceeded error might occur while waiting for a multiplayer match");
+                    "A MatchmakingRateLimitExceeded error might occur while waiting for a multiplayer match");
             }
         }
 
@@ -58,6 +58,11 @@ namespace RPSLS.Game.Api.GrpcServices
             await _playFabService.Initialize();
             var username = request.Username;
             var matchResult = await _tokenService.GetMatch(username);
+            if (string.IsNullOrWhiteSpace(matchResult.TicketId))
+            {
+                await responseStream.WriteAsync(CreateMatchStatusResponse("RateLimitExceeded"));
+            }
+
             while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
                 await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status));

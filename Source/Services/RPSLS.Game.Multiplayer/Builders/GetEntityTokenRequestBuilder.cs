@@ -2,7 +2,7 @@
 
 namespace RPSLS.Game.Multiplayer.Builders
 {
-    public class GetEntityTokenRequestBuilder : Builder<GetEntityTokenRequest>
+    public class GetEntityTokenRequestBuilder : PlayFabRequestCommonBuilder<GetEntityTokenRequestBuilder, GetEntityTokenRequest>
     {
     }
 }
