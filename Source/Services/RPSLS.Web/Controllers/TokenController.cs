@@ -15,10 +15,10 @@ namespace RPSLS.Web.Controllers
     {
         private const string BATTLE_URL = "/battle/multiplayer";
         private const string VALIDATE_URL = "/api/token/validate";
-        private readonly ITokenManagerClient _tokenManager;
+        private readonly IMultiplayerGameManagerClient _tokenManager;
 
         public TokenController(
-            ITokenManagerClient tokenManager)
+            IMultiplayerGameManagerClient tokenManager)
         {
             _tokenManager = tokenManager;
         }
@@ -45,8 +45,8 @@ namespace RPSLS.Web.Controllers
         public async Task<IActionResult> ValidateToken(string token)
         {
             var username = User.Identity.Name;
-            await _tokenManager.Join(username, token);
-            var matchFound = await _tokenManager.WaitMatch(username, (a, b) => { });
+            await _tokenManager.JoinPairing(username, token);
+            var matchFound = await _tokenManager.PairingStatus(username, (a, b) => { });
             return Redirect($"{BATTLE_URL}/{matchFound.MatchId}");
         }
     }

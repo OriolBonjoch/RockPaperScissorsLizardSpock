@@ -1,29 +1,29 @@
-﻿using Grpc.Core;
+﻿using GameApi.Proto;
+using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RPSLS.Game.Api.Data;
 using RPSLS.Game.Multiplayer.Config;
 using RPSLS.Game.Multiplayer.Services;
 using System.Threading.Tasks;
-using TokenApi.Proto;
 
 namespace RPSLS.Game.Api.GrpcServices
 {
-    public class TokenManagerService : TokenManager.TokenManagerBase
+    public class MultiplayerGameManagerService : MultiplayerGameManager.MultiplayerGameManagerBase
     {
         private const int FREE_TIER_MAX_REQUESTS = 10;
         private readonly IPlayFabService _playFabService;
         private readonly ITokenService _tokenService;
         private readonly ResultsDao _resultsDao;
         private readonly TokenSettings _tokenSettings;
-        private readonly ILogger<TokenManagerService> _logger;
+        private readonly ILogger<MultiplayerGameManagerService> _logger;
 
-        public TokenManagerService(
+        public MultiplayerGameManagerService(
             IPlayFabService playFabService,
             ITokenService tokenService,
             IOptions<TokenSettings> options,
             ResultsDao resultsDao,
-            ILogger<TokenManagerService> logger)
+            ILogger<MultiplayerGameManagerService> logger)
         {
             _playFabService = playFabService;
             _tokenService = tokenService;
@@ -38,22 +38,22 @@ namespace RPSLS.Game.Api.GrpcServices
             }
         }
 
-        public override async Task<CreateTokenResponse> CreateToken(CreateTokenRequest request, ServerCallContext context)
+        public override async Task<CreatePairingResponse> CreatePairing(CreatePairingRequest request, ServerCallContext context)
         {
             await _playFabService.Initialize();
             var token = await _tokenService.CreateToken(request.Username);
             _logger.LogInformation($"New token created for user {request.Username}: {token}");
-            return new CreateTokenResponse() { Token = token };
+            return new CreatePairingResponse() { Token = token };
         }
 
-        public override async Task<JoinTokenResponse> Join(JoinTokenRequest request, ServerCallContext context)
+        public override async Task<Empty> JoinPairing(JoinPairingRequest request, ServerCallContext context)
         {
             await _playFabService.Initialize();
             await _tokenService.JoinToken(request.Username, request.Token);
-            return new JoinTokenResponse();
+            return new Empty();
         }
 
-        public override async Task WaitMatch(MatchStatusRequest request, IServerStreamWriter<MatchStatusResponse> responseStream, ServerCallContext context)
+        public override async Task PairingStatus(PairingStatusRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
             await _playFabService.Initialize();
             var username = request.Username;
@@ -72,8 +72,8 @@ namespace RPSLS.Game.Api.GrpcServices
             }
         }
 
-        private static MatchStatusResponse CreateMatchStatusResponse(string status, string matchId = null)
-            => new MatchStatusResponse()
+        private static PairingStatusResponse CreateMatchStatusResponse(string status, string matchId = null)
+            => new PairingStatusResponse()
             {
                 Status = status ?? string.Empty,
                 MatchId = matchId ?? string.Empty,

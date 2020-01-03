@@ -56,8 +56,8 @@ namespace RPSLS.Game.Api
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGrpcService<GameManagerService>();
-                endpoints.MapGrpcService<TokenManagerService>();
+                endpoints.MapGrpcService<BotGameManagerService>();
+                endpoints.MapGrpcService<MultiplayerGameManagerService>();
                 endpoints.MapControllers();
             });
         }

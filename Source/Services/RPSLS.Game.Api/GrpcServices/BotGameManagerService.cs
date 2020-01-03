@@ -9,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace RPSLS.Game.Api.GrpcServices
 {
-    public class GameManagerService : GameManager.GameManagerBase
+    public class BotGameManagerService : BotGameManager.BotGameManagerBase
     {
         private readonly IChallengerService _challengersService;
         private readonly IGameService _gameService;
         private readonly ResultsDao _resultsDao;
-        private readonly ILogger<GameManagerService> _logger;
+        private readonly ILogger<BotGameManagerService> _logger;
 
-        public GameManagerService(
+        public BotGameManagerService(
             IChallengerService challengers,
             IGameService gameService,
             ResultsDao resultsDao,
-            ILogger<GameManagerService> logger
+            ILogger<BotGameManagerService> logger
             )
         {
             _challengersService = challengers;
@@ -29,7 +29,7 @@ namespace RPSLS.Game.Api.GrpcServices
             _logger = logger;
         }
 
-        public override Task<ChallengersList> GetChallengers(EmptyRequest request, ServerCallContext context)
+        public override Task<ChallengersList> GetChallengers(Empty request, ServerCallContext context)
         {
             var result = new ChallengersList();
             foreach (var challenger in _challengersService.Challengers)

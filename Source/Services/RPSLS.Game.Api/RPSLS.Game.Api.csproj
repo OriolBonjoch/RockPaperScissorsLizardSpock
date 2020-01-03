@@ -7,13 +7,11 @@
 
   <ItemGroup>
     <None Remove="Protos\GameApi.proto" />
-    <None Remove="Protos\TokenApi.proto" />
   </ItemGroup>
 
 
   <ItemGroup>
     <Protobuf Include="Protos\GameApi.proto" GrpcServices="Server" />
-    <Protobuf Include="Protos\TokenApi.proto" GrpcServices="Server" />
   </ItemGroup>
 
   <ItemGroup>

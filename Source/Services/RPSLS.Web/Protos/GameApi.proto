@@ -4,12 +4,20 @@ option csharp_namespace = "GameApi.Proto";
 
 package GameManagementApi;
 
-service GameManager {
-	rpc GetChallengers (EmptyRequest) returns (ChallengersList);
+service BotGameManager {
+	rpc GetChallengers (Empty) returns (ChallengersList);
 	rpc DoPlay (GameRequest) returns (GameResponse);
 }
 
-message EmptyRequest {}
+service MultiplayerGameManager {
+	rpc CreatePairing (CreatePairingRequest) returns (CreatePairingResponse);
+	rpc JoinPairing (JoinPairingRequest) returns (Empty);
+	rpc PairingStatus (PairingStatusRequest) returns (stream PairingStatusResponse);
+	rpc Pick (PickRequest) returns (Empty);
+	rpc GameStatus (GameStatusRequest) returns (stream GameStatusResponse);
+}
+
+message Empty {}
 
 message ChallengerInfo {
 	string name = 1;
@@ -43,4 +51,40 @@ message GameResponse {
 	int32 userPick = 4;
 	Result result = 5;
 	bool IsValid = 6;
+}
+
+
+message CreatePairingRequest {
+	string username = 1;
+}
+
+message CreatePairingResponse {
+	string token = 1;
+}
+
+message JoinPairingRequest {
+	string username = 1;
+	string token = 2;
+}
+
+message PairingStatusRequest {
+	string username = 1;
+	bool isMaster = 2;
+}
+
+message PairingStatusResponse {
+	string matchId = 1;
+	string status = 2;
+}
+
+message PickRequest {
+
+}
+
+message GameStatusRequest {
+
+}
+
+message GameStatusResponse {
+
 }

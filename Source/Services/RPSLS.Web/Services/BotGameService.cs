@@ -7,7 +7,7 @@ namespace RPSLS.Web.Services
 {
     public class BotGameService : GameService, IBotGameService
     {
-        public BotGameService(IGameManagerClient gameManager) : base(gameManager) { }
+        public BotGameService(IBotGameManagerClient gameManager) : base(gameManager) { }
 
         public async Task Play(string username, bool isTwitterUser)
         {

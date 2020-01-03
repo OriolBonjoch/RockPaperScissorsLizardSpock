@@ -11,11 +11,11 @@ using System.Threading.Tasks;
 
 namespace RPSLS.Web.Clients
 {
-    public class GameManagerClient : BaseClient, IGameManagerClient
+    public class BotGameManagerClient : BaseClient, IBotGameManagerClient
     {
         private readonly string _serverUrl;
 
-        public GameManagerClient(IOptions<GameManagerSettings> settings, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+        public BotGameManagerClient(IOptions<GameManagerSettings> settings, IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
         {
             _serverUrl = settings.Value.Url ?? throw new ArgumentNullException("Game Manager Url is null");
         }
@@ -31,7 +31,7 @@ namespace RPSLS.Web.Clients
             };
 
             var channel = GrpcChannel.ForAddress(_serverUrl);
-            var client = new GameManager.GameManagerClient(channel);
+            var client = new BotGameManager.BotGameManagerClient(channel);
             var result = await client.DoPlayAsync(request, GetRequestMetadata());
             return new ResultDto()
             {
@@ -47,8 +47,8 @@ namespace RPSLS.Web.Clients
         public async Task<IEnumerable<ChallengerDto>> Challengers()
         {
             var channel = GrpcChannel.ForAddress(_serverUrl);
-            var client = new GameManager.GameManagerClient(channel);
-            var result = await client.GetChallengersAsync(new EmptyRequest(), GetRequestMetadata());
+            var client = new BotGameManager.BotGameManagerClient(channel);
+            var result = await client.GetChallengersAsync(new Empty(), GetRequestMetadata());
             return result.Challengers.Select(ChallengerDto.FromProtoResponse).ToList();
         }
     }
