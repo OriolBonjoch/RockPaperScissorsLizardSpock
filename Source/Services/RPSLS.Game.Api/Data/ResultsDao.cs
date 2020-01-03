@@ -22,6 +22,30 @@ namespace RPSLS.Game.Api.Data
             _logger = loggerFactory.CreateLogger<ResultsDao>();
         }
 
+        public async Task CreateMatch(string matchId, string username, string challenger)
+        {
+            var dto = new MatchDto();
+            dto.PlayerName = username;
+            dto.PlayFabMatchId = matchId;
+            dto.Challenger.Name = challenger;
+            dto.Challenger.Type = "human";
+            if (_constr == null)
+            {
+                _logger.LogInformation("+++ Cosmos constr is null. Doc that would be written is:");
+                _logger.LogInformation(JsonSerializer.Serialize(dto));
+                _logger.LogInformation("+++ Nothing was written on Cosmos");
+                return;
+            }
+
+            var cResponse = await GetContainer();
+            var response = await cResponse.Container.CreateItemAsync(dto);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK &&
+                response.StatusCode != System.Net.HttpStatusCode.Created)
+            {
+                _logger.LogInformation($"Cosmos save attempt resulted with StatusCode {response.StatusCode}.");
+            }
+        }
+
         public async Task SaveMatch(PickDto pick, string username, int userPick, GameApi.Proto.Result result)
         {
             var dto = MatchDto.FromPickDto(pick);
@@ -38,15 +62,7 @@ namespace RPSLS.Game.Api.Data
                 _logger.LogInformation("+++ Nothing was written on Cosmos");
                 return;
             }
-            var client = new CosmosClient(_constr);
-            var db = client.GetDatabase(DatabaseName);
-            var cprops = new ContainerProperties() 
-            {
-                Id = "results",
-                PartitionKeyPath="/playerName"
-            };
-            var cResponse = await db.CreateContainerIfNotExistsAsync(cprops); 
-
+            var cResponse = await GetContainer();
             var response = await cResponse.Container.CreateItemAsync(dto);
             if(response.StatusCode != System.Net.HttpStatusCode.OK &&  
                 response.StatusCode != System.Net.HttpStatusCode.Created)
@@ -62,24 +78,19 @@ namespace RPSLS.Game.Api.Data
                 _logger.LogInformation($"Cosmos constr is null. No games returned for player {player}.");
                 return Enumerable.Empty<MatchDto>();
             }
-            var client = new CosmosClient(_constr);
-            var db = client.GetDatabase(DatabaseName);
-            var cprops = new ContainerProperties()
-            {
-                Id = "results",
-                PartitionKeyPath = "/playerName"
-            };
-            var cResponse = await db.CreateContainerIfNotExistsAsync(cprops);
-            var sqlQueryText = $"SELECT * FROM g WHERE g.playerName = '{player}' ORDER BY g.whenUtc DESC";
+
+            var cResponse = await GetContainer();
+            var sqlQueryText = $"SELECT * FROM g WHERE g.playerName = '{player}' AND (NOT(IS_DEFINED(g.playFabMatchId)) OR IS_NULL(g.playFabMatchId)) ORDER BY g.whenUtc DESC";
             var queryDefinition = new QueryDefinition(sqlQueryText);
             var rs = cResponse.Container.GetItemQueryIterator<MatchDto>(queryDefinition);
             var results = new List<MatchDto>();
-            while (rs.HasMoreResults && (limit <= 0 || (limit > 0 &&  results.Count < limit))) 
+            while (rs.HasMoreResults && (limit <= 0 || results.Count < limit))
             {
                 var items = await rs.ReadNextAsync();
                 results.AddRange(items);
             }
-            return limit > 0 ?  results.Take(limit).ToList() : results.ToList();
+
+            return limit > 0 ? results.Take(limit).ToList() : results.ToList();
         }
 
         internal static string ToText(int userPick)
@@ -93,6 +104,18 @@ namespace RPSLS.Game.Api.Data
                 4 => "Spock",
                 _ => "Unknown",
             };
+        }
+
+        private async Task<ContainerResponse> GetContainer()
+        {
+            var client = new CosmosClient(_constr);
+            var db = client.GetDatabase(DatabaseName);
+            var cprops = new ContainerProperties()
+            {
+                Id = "results",
+                PartitionKeyPath = "/playerName"
+            };
+            return await db.CreateContainerIfNotExistsAsync(cprops);
         }
     }
 }

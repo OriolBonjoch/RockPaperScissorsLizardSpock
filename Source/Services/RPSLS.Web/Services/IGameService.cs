@@ -5,7 +5,7 @@ namespace RPSLS.Web.Services
     public interface IGameService
     {
         int Pick { get; set; }
-        public string OpponentName { get; }
+        ChallengerDto Challenger { get; set; }
         ResultDto GameResult { get; set; }
     }
 }

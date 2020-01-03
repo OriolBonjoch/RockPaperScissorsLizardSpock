@@ -11,14 +11,14 @@ service GameManager {
 
 message EmptyRequest {}
 
-message ChallengerDto {
+message ChallengerInfo {
 	string name = 1;
 	string displayName = 2;
 }
 
 message ChallengersList {
 	int32 count = 1;
-	repeated ChallengerDto challengers = 2;
+	repeated ChallengerInfo challengers = 2;
 }
 
 

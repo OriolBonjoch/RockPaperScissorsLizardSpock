@@ -6,6 +6,7 @@ using RPSLS.Web.Config;
 using RPSLS.Web.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RPSLS.Web.Clients
@@ -48,7 +49,7 @@ namespace RPSLS.Web.Clients
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new GameManager.GameManagerClient(channel);
             var result = await client.GetChallengersAsync(new EmptyRequest(), GetRequestMetadata());
-            return result.Challengers;
+            return result.Challengers.Select(ChallengerDto.FromProtoResponse).ToList();
         }
     }
 }

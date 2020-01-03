@@ -42,7 +42,7 @@ namespace RPSLS.Game.Multiplayer.Services
         {
             if (_expiration != null)
                 if (_expiration.HasValue && _expiration.Value > DateTime.UtcNow) return;
-            
+
             if (!string.IsNullOrWhiteSpace(EntityToken))
                 return;
 
@@ -96,19 +96,35 @@ namespace RPSLS.Game.Multiplayer.Services
                 var listTickets = await Call(PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync, listTicketsRequest);
                 result.TicketId = listTickets?.TicketIds?.FirstOrDefault();
             }
-            
+
             if (string.IsNullOrWhiteSpace(result.TicketId)) return result;
 
-            var awaitTicketRequest = new GetMatchmakingTicketRequestBuilder()
+            var matchTicketRequest = new GetMatchmakingTicketRequestBuilder()
                 .WithUserContext(userEntity.Id, EntityToken)
                 .WithQueue(queueName)
                 .WithTicketId(result.TicketId)
                 .Build();
 
-            var matchResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingTicketAsync, awaitTicketRequest);
-            result.Status = matchResult?.Status ?? string.Empty;
-            result.MatchId = matchResult?.MatchId ?? string.Empty;
-            result.Finished = matchResult?.Status != null && !matchResult.Status.StartsWith("Waiting");
+            var matchTicketResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingTicketAsync, matchTicketRequest);
+            var status = matchTicketResult?.Status ?? string.Empty;
+            result.Status = status;
+            result.MatchId = matchTicketResult?.MatchId ?? string.Empty;
+            if (result.Matched)
+            {
+                var getMatchRequest = new GetMatchRequestBuilder()
+                    .WithId(result.MatchId)
+                    .WithQueue(queueName)
+                    .WithMemberAttributes()
+                    .Build();
+
+                var getMatchResult = await Call(PlayFabMultiplayerAPI.GetMatchAsync, getMatchRequest);
+                var opponentEntity = getMatchResult.Members?.FirstOrDefault(u => u.Entity.Id != userEntity.Id);
+                if (opponentEntity != null)
+                {
+                    result.Opponent = await GetUsername(opponentEntity.Entity.Id);
+                }
+            }
+
             return result;
         }
 
@@ -121,7 +137,41 @@ namespace RPSLS.Game.Multiplayer.Services
 
             var loginResult = await Call(PlayFabClientAPI.LoginWithCustomIDAsync, loginRequest);
             var userEntity = loginResult.EntityToken.Entity;
+            if (loginResult.NewlyCreated)
+            {
+                // Add a DisplayName to the title user so its easier to retrieve the twitter user;
+                var renameRequest = new UpdateUserTitleDisplayNameRequestBuilder()
+                    .WithName(username)
+                    .Build();
+
+                await Call(PlayFabClientAPI.UpdateUserTitleDisplayNameAsync, renameRequest);
+            }
+
             return userEntity;
+        }
+
+        private async Task<string> GetUsername(string titleId)
+        {
+            var getProfileRequest = new GetEntityProfileRequestBuilder()
+                .WithTitleEntity(titleId)
+                .WithTitleContext(_settings.Title, EntityToken)
+                .Build();
+
+            var profileResult = await Call(PlayFabProfilesAPI.GetProfileAsync, getProfileRequest);
+            var username = profileResult?.Profile?.DisplayName;
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                return username;
+            }
+
+            var playFabId = profileResult.Profile.Lineage.MasterPlayerAccountId;
+            var getAccountRequest = new GetAccountInfoRequestBuilder()
+                .WithPlayFabId(playFabId)
+                .Build();
+
+            var getAccountResult = await Call(PlayFabClientAPI.GetAccountInfoAsync, getAccountRequest);
+            username = getAccountResult.AccountInfo.TitleInfo.DisplayName;
+            return username ?? "Unknown";
         }
 
         private async Task EnsureQueueExist()
@@ -157,7 +207,7 @@ namespace RPSLS.Game.Multiplayer.Services
             if (apiError != null)
             {
                 var detailedError = PlayFabUtil.GenerateErrorReport(apiError);
-                _logger.LogWarning($"Something went wrong with PlayFab API call.{Environment.NewLine}{detailedError}");
+                _logger.LogWarning($"Something went wrong with PlayFab API call {playFabCall.Method.Name}.{Environment.NewLine}{detailedError}");
             }
 
             return taskResult;

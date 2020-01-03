@@ -7,10 +7,10 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-@*<div class="console-screen">
+<div class="console-screen">
     <p class="console-text">@Username</p>
     <div class="user-picks">
-        <div class="user-picks-container">
+        @*<div class="user-picks-container">
             @if (battleToBeStarted)
             {
                 <div class="pick active toplay">
@@ -36,25 +36,25 @@
                     }
                 }
             }
-        </div>
+        </div>*@
     </div>
 
-    @if (!battleToBeStarted)
+    @*@if (!battleToBeStarted)
     {
         <div class="cam-content">
             <div class="cam-button"><a class="cam-link" href="/cambattle/multiplayer">use webcam</a></div>
         </div>
-    }
+    }*@
 </div>
 
-@if (Game.Pick == -1 || battleToBeStarted)
-{
+@*@if (Game.Pick == -1 || battleToBeStarted)
+{*@
     <div class="console-vs">
         <div class="vs-circle">
             <p class="vs-text">VS</p>
         </div>
     </div>
-}
+@*}
 else
 {
     <div class="console-vs">
@@ -63,11 +63,12 @@ else
             <p class="start-battle-text">battle</p>
         </div>
     </div>
-}
+}*@
+
 <div class="console-screen">
     <p class="console-text">@Game.Challenger?.DisplayName</p>
     <div class="challenger-picks">
-        <div class="challenger-player challenger-picks-container">
+        @*<div class="challenger-player challenger-picks-container">
             @if (battleToBeStarted)
             {
                 <div style="transform: scaleX(-1)" class="pick active toplay">
@@ -99,9 +100,9 @@ else
                     </div>
                 }
             }
-        </div>
+        </div>*@
     </div>
-</div>*@
+</div>
 
 
 @code

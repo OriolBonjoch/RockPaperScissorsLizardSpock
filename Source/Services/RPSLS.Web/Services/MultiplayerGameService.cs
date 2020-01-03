@@ -19,7 +19,8 @@ namespace RPSLS.Web.Services
 
         public async Task WaitForMatchId(string username, Action<string, string> matchIdCallback)
         {
-            MatchId = await _tokenManager.WaitMatch(username, matchIdCallback);
+            var matchFound = await _tokenManager.WaitMatch(username, matchIdCallback);
+            MatchId = matchFound.MatchId;
         }
     }
 }

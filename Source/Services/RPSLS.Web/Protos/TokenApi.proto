@@ -7,7 +7,6 @@ package GameManagementApi;
 service TokenManager {
 	rpc CreateToken (CreateTokenRequest) returns (CreateTokenResponse);
 	rpc Join (JoinTokenRequest) returns (JoinTokenResponse);
-	rpc MatchStatus (MatchStatusRequest) returns (MatchStatusResponse);
 	rpc WaitMatch (MatchStatusRequest) returns (stream MatchStatusResponse);
 }
 
@@ -29,6 +28,7 @@ message JoinTokenResponse {
 
 message MatchStatusRequest {
 	string username = 1;
+	bool isMaster = 2;
 }
 
 message MatchStatusResponse {

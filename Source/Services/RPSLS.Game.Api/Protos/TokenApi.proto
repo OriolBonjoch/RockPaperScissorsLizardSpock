@@ -28,6 +28,7 @@ message JoinTokenResponse {
 
 message MatchStatusRequest {
 	string username = 1;
+	bool isMaster = 2;
 }
 
 message MatchStatusResponse {

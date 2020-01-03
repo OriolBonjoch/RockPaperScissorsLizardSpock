@@ -1,6 +1,7 @@
 ﻿using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using RPSLS.Game.Api.Data;
 using RPSLS.Game.Multiplayer.Config;
 using RPSLS.Game.Multiplayer.Services;
 using System.Threading.Tasks;
@@ -13,6 +14,7 @@ namespace RPSLS.Game.Api.GrpcServices
         private const int FREE_TIER_MAX_REQUESTS = 10;
         private readonly IPlayFabService _playFabService;
         private readonly ITokenService _tokenService;
+        private readonly ResultsDao _resultsDao;
         private readonly TokenSettings _tokenSettings;
         private readonly ILogger<TokenManagerService> _logger;
 
@@ -20,10 +22,12 @@ namespace RPSLS.Game.Api.GrpcServices
             IPlayFabService playFabService,
             ITokenService tokenService,
             IOptions<TokenSettings> options,
+            ResultsDao resultsDao,
             ILogger<TokenManagerService> logger)
         {
             _playFabService = playFabService;
             _tokenService = tokenService;
+            _resultsDao = resultsDao;
             _tokenSettings = options.Value;
             _logger = logger;
 
@@ -54,19 +58,25 @@ namespace RPSLS.Game.Api.GrpcServices
             await _playFabService.Initialize();
             var username = request.Username;
             var matchResult = await _tokenService.GetMatch(username);
-            var response = new MatchStatusResponse() { MatchId = string.Empty, Status = matchResult.Status };
-            while (!matchResult.Finished)
+            while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
-                await responseStream.WriteAsync(response);
+                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status));
                 await Task.Delay(_tokenSettings.TicketStatusWait);
                 matchResult = await _tokenService.GetMatch(username, matchResult.TicketId);
-                response = new MatchStatusResponse() { MatchId = string.Empty, Status = matchResult.Status };
             }
 
-            await responseStream.WriteAsync(new MatchStatusResponse() {
-                MatchId = matchResult.MatchId ?? string.Empty,
-                Status = matchResult.Status
-            });
+            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, matchResult.MatchId));
+            if (request.IsMaster)
+            {
+                await _resultsDao.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
+            }
         }
+
+        private static MatchStatusResponse CreateMatchStatusResponse(string status, string matchId = null)
+            => new MatchStatusResponse()
+            {
+                Status = status ?? string.Empty,
+                MatchId = matchId ?? string.Empty,
+            };
     }
 }

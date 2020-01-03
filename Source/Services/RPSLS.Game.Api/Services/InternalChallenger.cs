@@ -5,21 +5,21 @@ using System.Net.Http;
 
 namespace RPSLS.Game.Api.Services
 {
-    public class Challenger : ChallengerBase, IChallenger
+    public class InternalChallenger : ChallengerBase, IChallenger
     {
         private readonly string _name;
         private readonly string _displayname;
 
-        public Challenger(ChallengerOptions options, V1Service svc, IHttpClientFactory httpClientFactory) : base($"http://{svc.Metadata.Name}", httpClientFactory)
+        public InternalChallenger(ChallengerOptions options, V1Service svc, IHttpClientFactory httpClientFactory) : base($"http://{svc.Metadata.Name}", httpClientFactory)
         {
 
             _name = options.Name;
             _displayname = options.DisplayName;
         }
 
-        public ChallengerDto Info
+        public ChallengerInfo Info
         {
-            get => new ChallengerDto
+            get => new ChallengerInfo
             {
                 Name = _name,
                 DisplayName = _displayname

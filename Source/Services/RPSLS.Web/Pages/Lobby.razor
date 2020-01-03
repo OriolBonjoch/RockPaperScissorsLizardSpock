@@ -39,7 +39,7 @@
     private string Token { get; set; }
     private string TokenLink { get; set; }
     public bool Timeout { get; set; }
-    public string Status { get; set; }
+    public string Status { get; set; } = "creating link to share...";
 
     protected override async Task OnInitializedAsync()
     {

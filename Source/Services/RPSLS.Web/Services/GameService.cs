@@ -12,7 +12,7 @@ namespace RPSLS.Web.Services
 
         public IGameManagerClient GameManager { get; private set; }
         public int Pick { get; set; }
-        public string OpponentName { get; protected set; }
+        public ChallengerDto Challenger { get; set; }
         public ResultDto GameResult { get; set; }
     }
 }

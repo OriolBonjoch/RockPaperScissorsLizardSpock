@@ -13,19 +13,21 @@ namespace RPSLS.Web.Controllers
     [Route("api/[controller]")]
     public class TokenController : Controller
     {
-        private const string TWITTER_BATTLE_URL = "/battle/multiplayer";
-        private const string TWITTER_URL = "/api/token/validate";
+        private const string BATTLE_URL = "/battle/multiplayer";
+        private const string VALIDATE_URL = "/api/token/validate";
         private readonly ITokenManagerClient _tokenManager;
 
-        public TokenController(ITokenManagerClient tokenManager)
+        public TokenController(
+            ITokenManagerClient tokenManager)
         {
             _tokenManager = tokenManager;
         }
 
         [HttpGet("{token}")]
+        //public IActionResult JoinGameAsync(string token)
         public async Task<IActionResult> JoinGameAsync(string token)
         {
-            var redirect = $"{TWITTER_URL}/{token}";
+            var redirect = $"{VALIDATE_URL}/{token}";
 
             //// TODO: remove code
             var claims = new List<Claim> {
@@ -44,8 +46,8 @@ namespace RPSLS.Web.Controllers
         {
             var username = User.Identity.Name;
             await _tokenManager.Join(username, token);
-            var matchId = await _tokenManager.WaitMatch(username, (a, b) => { });
-            return Redirect($"{TWITTER_BATTLE_URL}/{matchId}");
+            var matchFound = await _tokenManager.WaitMatch(username, (a, b) => { });
+            return Redirect($"{BATTLE_URL}/{matchFound.MatchId}");
         }
     }
 }

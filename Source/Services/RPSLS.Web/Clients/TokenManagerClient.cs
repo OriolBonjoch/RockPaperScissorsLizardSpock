@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using RPSLS.Web.Config;
+using RPSLS.Web.Models;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,7 +36,7 @@ namespace RPSLS.Web.Clients
             await client.JoinAsync(request, GetRequestMetadata());
         }
 
-        public async Task<string> WaitMatch(string username, Action<string, string> matchIdCallback)
+        public async Task<MatchFoundDto> WaitMatch(string username, Action<string, string> matchIdCallback)
         {
             var tokenSource = new CancellationTokenSource();
             var request = new MatchStatusRequest() { Username = username };
@@ -49,7 +50,7 @@ namespace RPSLS.Web.Clients
                 matchIdCallback(response.MatchId, response.Status);
             }
 
-            return response.MatchId;
+            return new MatchFoundDto { MatchId = response.MatchId };
         }
     }
 }

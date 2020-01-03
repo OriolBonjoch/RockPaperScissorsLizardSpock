@@ -47,7 +47,10 @@ namespace RPSLS.Game.Api.Data
         public MoveDto ChallengerMove {get; set;}
 
         [JsonProperty(PropertyName = "result")]
-        public ResultDto Result {get; set;}        
+        public ResultDto Result {get; set; }
+
+        [JsonProperty(PropertyName = "playFabMatchId")]
+        public string PlayFabMatchId { get; set; }
 
         public MatchDto()
         {

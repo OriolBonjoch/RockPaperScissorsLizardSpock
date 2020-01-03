@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RPSLS.Web.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace RPSLS.Web.Clients
@@ -9,6 +10,6 @@ namespace RPSLS.Web.Clients
 
         Task Join(string username, string token);
 
-        Task<string> WaitMatch(string username, Action<string, string> matchIdCallback);
+        Task<MatchFoundDto> WaitMatch(string username, Action<string, string> matchIdCallback);
     }
 }
