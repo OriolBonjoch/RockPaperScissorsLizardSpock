@@ -7,17 +7,21 @@ namespace RPSLS.Web.Services
 {
     public class BotGameService : GameService, IBotGameService
     {
-        public BotGameService(IBotGameManagerClient gameManager) : base(gameManager) { }
+        private readonly IBotGameManagerClient _gameManager;
+
+        public BotGameService(IBotGameManagerClient gameManager) {
+            _gameManager = gameManager;
+        }
 
         public async Task Play(string username, bool isTwitterUser)
         {
-            GameResult = await GameManager.Play(
+            GameResult = await _gameManager.Play(
                Challenger.Name,
                username,
                Pick,
                isTwitterUser);
         }
 
-        public Task<IEnumerable<ChallengerDto>> Challengers() => GameManager.Challengers();
+        public Task<IEnumerable<ChallengerDto>> Challengers() => _gameManager.Challengers();
     }
 }

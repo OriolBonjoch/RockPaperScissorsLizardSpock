@@ -11,5 +11,7 @@ namespace RPSLS.Web.Clients
         Task JoinPairing(string username, string token);
 
         Task<MatchFoundDto> PairingStatus(string username, Action<string, string> matchIdCallback);
+
+        Task<ResultDto> GameStatus(string matchId, string username, Action<ResultDto> gameListener);
     }
 }

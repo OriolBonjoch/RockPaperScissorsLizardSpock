@@ -51,5 +51,37 @@ namespace RPSLS.Web.Clients
 
             return new MatchFoundDto { MatchId = response.MatchId };
         }
+
+        public async Task<ResultDto> GameStatus(string matchId, string username, Action<ResultDto> gameListener)
+        {
+            var request = new GameStatusRequest()
+            {
+                MatchId = matchId,
+                Username = username
+            };
+
+            var channel = GrpcChannel.ForAddress(_serverUrl);
+            var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
+            using var stream = client.GameStatus(request, GetRequestMetadata());
+            ResultDto resultDto = null;
+            while (await stream.ResponseStream.MoveNext(CancellationToken.None))
+            {
+                var response = stream.ResponseStream.Current;
+                resultDto = new ResultDto
+                {
+                    Challenger = response.Challenger,
+                    ChallengerPick = response.ChallengerPick,
+                    User = response.User,
+                    UserPick = response.UserPick,
+                    Result = (int)response.Result,
+                    IsValid = true,
+                    IsFinished = response.IsFinished
+                };
+
+                gameListener(resultDto);
+            }
+
+            return resultDto;
+        }
     }
 }

@@ -42,6 +42,7 @@ enum Result
 	Tie = 0;
 	Player = 1;
 	Challenger = 2;
+	Pending = 3;
 }
 
 message GameResponse {

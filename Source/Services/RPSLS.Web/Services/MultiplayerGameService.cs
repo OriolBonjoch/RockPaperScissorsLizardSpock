@@ -1,4 +1,5 @@
 ﻿using RPSLS.Web.Clients;
+using RPSLS.Web.Models;
 using System;
 using System.Threading.Tasks;
 
@@ -6,21 +7,26 @@ namespace RPSLS.Web.Services
 {
     public class MultiplayerGameService : GameService, IMultiplayerGameService
     {
-        private readonly IMultiplayerGameManagerClient _tokenManager;
+        private readonly IMultiplayerGameManagerClient _gameManager;
 
-        public MultiplayerGameService(IBotGameManagerClient gameManager, IMultiplayerGameManagerClient tokenManager) : base(gameManager)
+        public MultiplayerGameService(IMultiplayerGameManagerClient gameManager)
         {
-            _tokenManager = tokenManager;
+            _gameManager = gameManager;
         }
 
         public string MatchId { get; set; }
 
-        public Task<string> GetToken(string username) => _tokenManager.CreatePairing(username);
+        public Task<string> GetToken(string username) => _gameManager.CreatePairing(username);
 
         public async Task WaitForMatchId(string username, Action<string, string> matchIdCallback)
         {
-            var matchFound = await _tokenManager.PairingStatus(username, matchIdCallback);
+            var matchFound = await _gameManager.PairingStatus(username, matchIdCallback);
             MatchId = matchFound.MatchId;
+        }
+
+        public async Task AddGameListener(string username, Action<ResultDto> gameListener)
+        {
+            await _gameManager.GameStatus(MatchId, username, gameListener);
         }
     }
 }

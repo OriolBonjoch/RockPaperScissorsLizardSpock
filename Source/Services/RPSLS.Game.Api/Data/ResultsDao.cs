@@ -29,6 +29,8 @@ namespace RPSLS.Game.Api.Data
             dto.Challenger.Type = "human";
             dto.PlayerName = username;
             dto.PlayFabMatchId = matchId;
+            dto.Result.Value = (int)GameApi.Proto.Result.Pending;
+            dto.Result.Winner = Enum.GetName(typeof(GameApi.Proto.Result), GameApi.Proto.Result.Pending);
             if (_constr == null)
             {
                 _logger.LogInformation("+++ Cosmos constr is null. Doc that would be written is:");

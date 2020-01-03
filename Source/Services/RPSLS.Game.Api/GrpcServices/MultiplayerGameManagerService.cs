@@ -149,7 +149,7 @@ namespace RPSLS.Game.Api.GrpcServices
                 Result = (Result)match.Result.Value,
                 IsMaster = true,
                 IsCancelled = false,
-                IsFinished = !string.IsNullOrWhiteSpace(match.Result.Winner)
+                IsFinished = match.Result.Value != (int)Result.Pending
             };
         }
 
@@ -164,7 +164,7 @@ namespace RPSLS.Game.Api.GrpcServices
                 Result = (Result)match.Result.Value,
                 IsMaster = false,
                 IsCancelled = false,
-                IsFinished = !string.IsNullOrWhiteSpace(match.Result.Winner)
+                IsFinished = match.Result.Value != (int)Result.Pending
             };
         }
     }

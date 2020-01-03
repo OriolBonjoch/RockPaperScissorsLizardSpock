@@ -4,7 +4,6 @@ using System;
 
 namespace RPSLS.Game.Api.Data
 {
-
     public class ResultDto
     {
         [JsonProperty("value")]
@@ -12,6 +11,7 @@ namespace RPSLS.Game.Api.Data
         [JsonProperty("winner")]
         public string Winner { get; set; }
     }
+
     public class MoveDto
     {
         [JsonProperty("value")]
@@ -19,6 +19,7 @@ namespace RPSLS.Game.Api.Data
         [JsonProperty("text")]
         public string Text { get; set; }
     }
+
     public class ChallengerDto
     {
         [JsonProperty(PropertyName = "name")]
@@ -55,10 +56,10 @@ namespace RPSLS.Game.Api.Data
         public MatchDto()
         {
             Id = Guid.NewGuid();
-            Challenger = new ChallengerDto();
-            WhenUtc = DateTime.UtcNow;
             PlayerMove = new MoveDto();
+            Challenger = new ChallengerDto();
             ChallengerMove = new MoveDto();
+            WhenUtc = DateTime.UtcNow;
             Result = new ResultDto();
         }
 
