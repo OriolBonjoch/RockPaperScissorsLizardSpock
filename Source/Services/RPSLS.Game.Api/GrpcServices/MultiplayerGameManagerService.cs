@@ -3,6 +3,7 @@ using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RPSLS.Game.Api.Data;
+using RPSLS.Game.Api.Data.Models;
 using RPSLS.Game.Api.Services;
 using RPSLS.Game.Multiplayer.Config;
 using RPSLS.Game.Multiplayer.Services;
@@ -19,7 +20,7 @@ namespace RPSLS.Game.Api.GrpcServices
         private readonly IPlayFabService _playFabService;
         private readonly ITokenService _tokenService;
         private readonly IGameService _gameService;
-        private readonly IResultsDao _resultsDao;
+        private readonly IMatchesRepository _repository;
         private readonly MultiplayerSettings _multiplayerSettings;
         private readonly ILogger<MultiplayerGameManagerService> _logger;
 
@@ -28,13 +29,13 @@ namespace RPSLS.Game.Api.GrpcServices
             ITokenService tokenService,
             IGameService gameService,
             IOptions<MultiplayerSettings> options,
-            IResultsDao resultsDao,
+            IMatchesRepository repository,
             ILogger<MultiplayerGameManagerService> logger)
         {
             _playFabService = playFabService;
             _tokenService = tokenService;
             _gameService = gameService;
-            _resultsDao = resultsDao;
+            _repository = repository;
             _multiplayerSettings = options.Value;
             _logger = logger;
 
@@ -80,52 +81,52 @@ namespace RPSLS.Game.Api.GrpcServices
             await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, matchResult.MatchId));
             if (request.IsMaster)
             {
-                await _resultsDao.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
+                await _repository.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
             }
         }
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)
         {
-            var dto = await _resultsDao.GetMatch(request.MatchId);
+            var dto = await _repository.GetMatch(request.MatchId);
             while (dto == null)
             {
                 await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
-                dto = await _resultsDao.GetMatch(request.MatchId);
+                dto = await _repository.GetMatch(request.MatchId);
             }
 
             var isMaster = dto.PlayerName == request.Username;
-            var result = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
-            await responseStream.WriteAsync(result);
-            while (!context.CancellationToken.IsCancellationRequested)
+            var gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
+            await responseStream.WriteAsync(gameStatus);
+            while (!context.CancellationToken.IsCancellationRequested && gameStatus.Result == Result.Pending)
             {
                 await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
-                dto = await _resultsDao.GetMatch(request.MatchId);
+                dto = await _repository.GetMatch(request.MatchId);
                 if (dto == null)
                 {
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
 
-                var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) < dto.WhenUtc;
+                var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) > dto.WhenUtc;
                 if (isMaster && matchExpired)
                 {
-                    await _resultsDao.DeleteMatch(request.MatchId);
+                    await _repository.DeleteMatch(request.MatchId);
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
 
-                result = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
-                await responseStream.WriteAsync(result);
+                gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
+                await responseStream.WriteAsync(gameStatus);
             }
         }
 
         public override async Task<Empty> Pick(PickRequest request, ServerCallContext context)
         {
-            var dto = await _resultsDao.SaveMatchPick(request.MatchId, request.Username, request.Pick);
+            var dto = await _repository.SaveMatchPick(request.MatchId, request.Username, request.Pick);
             if (!string.IsNullOrWhiteSpace(dto.ChallengerMove?.Text) && !string.IsNullOrWhiteSpace(dto.PlayerMove?.Text))
             {
                 var result = _gameService.Check(dto.PlayerMove.Value, dto.ChallengerMove.Value);
-                await _resultsDao.SaveMatchResult(request.MatchId, result);
+                await _repository.SaveMatchResult(request.MatchId, result);
             }
 
             return new Empty();
@@ -144,7 +145,7 @@ namespace RPSLS.Game.Api.GrpcServices
             {
                 User = match.PlayerName,
                 UserPick = match.PlayerMove.Value,
-                Challenger = match.Challenger.Name,
+                Challenger = match.Challenger?.Name ?? "-",
                 ChallengerPick = match.ChallengerMove.Value,
                 Result = (Result)match.Result.Value,
                 IsMaster = true,
@@ -155,16 +156,23 @@ namespace RPSLS.Game.Api.GrpcServices
 
         private static GameStatusResponse CreateGameStatusForOpponent(MatchDto match)
         {
+            var result = match.Result.Value switch
+            {
+                1 => Result.Challenger,
+                2 => Result.Player,
+                _ => (Result)match.Result.Value
+            };
+
             return new GameStatusResponse
             {
                 User = match.Challenger.Name,
                 UserPick = match.ChallengerMove.Value,
-                Challenger = match.PlayerName,
+                Challenger = match.PlayerName ?? "-",
                 ChallengerPick = match.PlayerMove.Value,
-                Result = (Result)match.Result.Value,
+                Result = result,
                 IsMaster = false,
                 IsCancelled = false,
-                IsFinished = match.Result.Value != (int)Result.Pending
+                IsFinished = result != Result.Pending
             };
         }
     }

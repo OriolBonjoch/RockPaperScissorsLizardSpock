@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RPSLS.Game.Api", "Services\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RPSLS.ModelUploader.Web", "Services\RPSLS.ModelUploader.Web\RPSLS.ModelUploader.Web.csproj", "{CD0AF309-7688-46CB-A656-400DB57ADBA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPSLS.Game.Multiplayer", "Services\RPSLS.Game.Multiplayer\RPSLS.Game.Multiplayer.csproj", "{AA620F08-69EC-4C47-AB79-6080A2718DD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RPSLS.Game.Multiplayer", "Services\RPSLS.Game.Multiplayer\RPSLS.Game.Multiplayer.csproj", "{AA620F08-69EC-4C47-AB79-6080A2718DD1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

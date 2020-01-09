@@ -46,7 +46,7 @@ namespace RPSLS.Web.Controllers
         {
             var username = User.Identity.Name;
             await _tokenManager.JoinPairing(username, token);
-            var matchFound = await _tokenManager.PairingStatus(username, (a, b) => { });
+            var matchFound = await _tokenManager.PairingStatus(username, false, (a, b) => { });
             return Redirect($"{BATTLE_URL}/{matchFound.MatchId}");
         }
     }

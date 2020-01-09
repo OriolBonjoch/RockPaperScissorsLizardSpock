@@ -20,13 +20,19 @@ namespace RPSLS.Web.Services
 
         public async Task WaitForMatchId(string username, Action<string, string> matchIdCallback)
         {
-            var matchFound = await _gameManager.PairingStatus(username, matchIdCallback);
+            var matchFound = await _gameManager.PairingStatus(username, true, matchIdCallback);
             MatchId = matchFound.MatchId;
         }
 
         public async Task AddGameListener(string username, Action<ResultDto> gameListener)
         {
             await _gameManager.GameStatus(MatchId, username, gameListener);
+        }
+
+        public async Task UserPick(string username, int pick)
+        {
+            Pick = pick;
+            await _gameManager.Pick(MatchId, username, pick);
         }
     }
 }

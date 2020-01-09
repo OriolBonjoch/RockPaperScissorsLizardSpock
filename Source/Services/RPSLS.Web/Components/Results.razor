@@ -1,13 +1,4 @@
-﻿@layout ConsoleLayout
-@page "/result"
-@attribute [Authorize]
-
-@inject IGameService Game
-@inject SvgHelper svgHelper
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager NavigationManager
-
-<div class="result console-screen @resultStyle">
+﻿<div class="result console-screen @resultStyle">
     <p class="console-text">@result.User</p>
     <div class="user-picks">
         <div class="user-picks-container">
@@ -67,6 +58,8 @@
 
 @code
 {
+    [Parameter] public IGameService Game { get; set; }
+
     ResultDto result = new ResultDto();
     string resultMessage = string.Empty;
     bool userIsWinner = false;
@@ -80,26 +73,10 @@
         new ChallengerErrorViewModel() { Name = "dotnet", Text = "how did I end here?", Image = "node-error.png" },
         new ChallengerErrorViewModel() { Name = "java", Text = "how did I end here?", Image = "node-error.png" },
         new ChallengerErrorViewModel() { Name = "php", Text = "how did I end here?", Image = "node-error.png" }
-                };
-
-    [CascadingParameter] ConsoleLayout Layout { get; set; }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            Layout.Initialize(title: "results", withHelp: true, hasToShowGithub: true);
-        }
-    }
+        };
 
     protected override void OnInitialized()
     {
-        if (Game.GameResult == null)
-        {
-            NavigationManager.NavigateTo("/challenger");
-            return;
-        }
-
         result.UserPick = Game.Pick;
         result = Game.GameResult;
 

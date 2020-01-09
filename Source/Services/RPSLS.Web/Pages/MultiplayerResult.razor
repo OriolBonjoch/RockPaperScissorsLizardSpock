@@ -1,0 +1,33 @@
+﻿@layout ConsoleLayout
+@page "/result/multiplayer"
+@attribute [Authorize]
+
+@inject IMultiplayerGameService Game
+@inject NavigationManager NavigationManager
+
+<RPSLS.Web.Components.Results Game="Game" />
+
+@code
+{
+    [CascadingParameter] ConsoleLayout Layout { get; set; }
+
+    [Parameter]
+    public string MatchId { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Layout.Initialize(title: "results", withHelp: true, hasToShowGithub: true);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Game.GameResult == null)
+        {
+            NavigationManager.NavigateTo("/challenger");
+            return;
+        }
+    }
+}

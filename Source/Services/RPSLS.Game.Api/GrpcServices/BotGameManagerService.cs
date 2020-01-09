@@ -13,13 +13,13 @@ namespace RPSLS.Game.Api.GrpcServices
     {
         private readonly IChallengerService _challengersService;
         private readonly IGameService _gameService;
-        private readonly IResultsDao _resultsDao;
+        private readonly IMatchesRepository _resultsDao;
         private readonly ILogger<BotGameManagerService> _logger;
 
         public BotGameManagerService(
             IChallengerService challengers,
             IGameService gameService,
-            IResultsDao resultsDao,
+            IMatchesRepository resultsDao,
             ILogger<BotGameManagerService> logger
             )
         {

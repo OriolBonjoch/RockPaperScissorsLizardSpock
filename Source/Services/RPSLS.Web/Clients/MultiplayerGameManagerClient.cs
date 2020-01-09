@@ -36,9 +36,12 @@ namespace RPSLS.Web.Clients
             await client.JoinPairingAsync(request, GetRequestMetadata());
         }
 
-        public async Task<MatchFoundDto> PairingStatus(string username, Action<string, string> matchIdCallback)
+        public async Task<MatchFoundDto> PairingStatus(string username, bool isMaster, Action<string, string> matchIdCallback)
         {
-            var request = new PairingStatusRequest() { Username = username };
+            var request = new PairingStatusRequest() {
+                Username = username,
+                IsMaster = isMaster
+            };
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
             using var stream = client.PairingStatus(request, GetRequestMetadata());
@@ -50,6 +53,19 @@ namespace RPSLS.Web.Clients
             }
 
             return new MatchFoundDto { MatchId = response.MatchId };
+        }
+
+        public async Task Pick(string matchId, string username, int pick)
+        {
+            var request = new PickRequest()
+            {
+                MatchId = matchId,
+                Username = username,
+                Pick = pick
+            };
+            var channel = GrpcChannel.ForAddress(_serverUrl);
+            var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
+            await client.PickAsync(request, GetRequestMetadata());
         }
 
         public async Task<ResultDto> GameStatus(string matchId, string username, Action<ResultDto> gameListener)

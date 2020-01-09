@@ -2,32 +2,8 @@
 using RPSLS.Game.Api.Services;
 using System;
 
-namespace RPSLS.Game.Api.Data
+namespace RPSLS.Game.Api.Data.Models
 {
-    public class ResultDto
-    {
-        [JsonProperty("value")]
-        public int Value { get; set; }
-        [JsonProperty("winner")]
-        public string Winner { get; set; }
-    }
-
-    public class MoveDto
-    {
-        [JsonProperty("value")]
-        public int Value { get; set; }
-        [JsonProperty("text")]
-        public string Text { get; set; }
-    }
-
-    public class ChallengerDto
-    {
-        [JsonProperty(PropertyName = "name")]
-        public string Name { get; set; }
-        [JsonProperty(PropertyName = "type")]
-        public string Type { get; set; }
-    }
-
     public class MatchDto
     {
         [JsonProperty(PropertyName = "id")]

@@ -9,6 +9,7 @@ namespace RPSLS.Web.Services
         string MatchId { get; set; }
         Task<string> GetToken(string username);
         Task WaitForMatchId(string username, Action<string, string> matchIdCallback);
+        Task UserPick(string username, int pick);
         Task AddGameListener(string username, Action<ResultDto> gameListener);
     }
 }

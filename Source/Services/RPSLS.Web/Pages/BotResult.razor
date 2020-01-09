@@ -1,0 +1,31 @@
+﻿@layout ConsoleLayout
+@page "/result"
+@attribute [Authorize]
+
+@inject IBotGameService Game
+@inject NavigationManager NavigationManager
+
+<RPSLS.Web.Components.Results Game="Game" />
+
+@code
+{
+
+    [CascadingParameter] ConsoleLayout Layout { get; set; }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Layout.Initialize(title: "results", withHelp: true, hasToShowGithub: true);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Game.GameResult == null)
+        {
+            NavigationManager.NavigateTo("/challenger");
+            return;
+        }
+    }
+}

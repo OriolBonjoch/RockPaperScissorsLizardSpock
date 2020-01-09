@@ -16,6 +16,8 @@ namespace RPSLS.Game.Multiplayer.Services
     public class PlayFabService : IPlayFabService
     {
         private const string queueName = "rpsls_queue";
+        private const string WinsStat = "Wins";
+        private const string TotalStat = "Total";
         private readonly ILogger<PlayFabService> _logger;
         private readonly MultiplayerSettings _settings;
         private DateTime? _expiration;
@@ -123,6 +125,11 @@ namespace RPSLS.Game.Multiplayer.Services
             return result;
         }
 
+        public async Task UpdateStats(bool isWinner)
+        {
+            await Call(PlayFabServerAPI.UpdatePlayerStatisticsAsync, null);
+        }
+
         private async Task<EntityKey> GetUserEntity(string username)
         {
             var loginRequest = new LoginWithCustomIDRequestBuilder()
@@ -187,7 +194,20 @@ namespace RPSLS.Game.Multiplayer.Services
             }
         }
 
-        private Task EnsureLeaderBoardExists() => Task.CompletedTask;
+        private async Task EnsureLeaderBoardExists()
+        {
+            await Call(
+                PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
+                new CreatePlayerStatisticDefinitionRequestBuilder()
+                    .WithAggregatedStat(WinsStat)
+                    .Build());
+
+            await Call(
+                PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
+                new CreatePlayerStatisticDefinitionRequestBuilder()
+                    .WithAggregatedStat(TotalStat)
+                    .Build());
+        }
 
         private async Task<U> Call<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, T request) where U : PlayFabResultCommon
             => (await CallWithError(playFabCall, request)).Result;

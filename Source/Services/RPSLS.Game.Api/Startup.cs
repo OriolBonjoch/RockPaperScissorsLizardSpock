@@ -27,10 +27,15 @@ namespace RPSLS.Game.Api
         {
             services.AddMultiplayer(Configuration);
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.AddSingleton<IMatchesCacheService, MatchesCacheService>();
             services.AddApplicationInsightsTelemetry();
             services.AddControllers();
             services.AddHealthChecks();
-            services.AddScoped<IResultsDao>(sp => new ResultsDao(Configuration["cosmos-constr"], sp.GetService<ILoggerFactory>()));
+            services.AddScoped<IMatchesRepository>(sp => new MatchesRepository(
+                Configuration["cosmos-constr"],
+                sp.GetService<IMatchesCacheService>(),
+                sp.GetService<ILoggerFactory>()));
+
             services.AddTransient<IGameService, GameService>();
             services.AddHttpClient("Challenger");
             services.AddGrpc();
