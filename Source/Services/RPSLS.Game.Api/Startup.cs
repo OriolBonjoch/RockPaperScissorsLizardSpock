@@ -48,7 +48,7 @@ namespace RPSLS.Game.Api
                     sp.GetService<ILoggerFactory>()));
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime applicationLifetime)
         {
             if (env.IsDevelopment())
             {
@@ -58,7 +58,7 @@ namespace RPSLS.Game.Api
             app.UseRouting();
             app.UseAuthorization();
             app.UseHealthChecks("/health");
-
+            app.UsePlayFab(applicationLifetime);
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapGrpcService<BotGameManagerService>();

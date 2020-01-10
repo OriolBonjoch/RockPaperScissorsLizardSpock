@@ -48,7 +48,6 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task<CreatePairingResponse> CreatePairing(CreatePairingRequest request, ServerCallContext context)
         {
-            await _playFabService.Initialize();
             var token = await _tokenService.CreateToken(request.Username);
             _logger.LogInformation($"New token created for user {request.Username}: {token}");
             return new CreatePairingResponse() { Token = token };
@@ -56,19 +55,20 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task<Empty> JoinPairing(JoinPairingRequest request, ServerCallContext context)
         {
-            await _playFabService.Initialize();
             await _tokenService.JoinToken(request.Username, request.Token);
             return new Empty();
         }
 
         public override async Task PairingStatus(PairingStatusRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
-            await _playFabService.Initialize();
             var username = request.Username;
             var matchResult = await _tokenService.GetMatch(username);
-            if (string.IsNullOrWhiteSpace(matchResult.TicketId))
+            while (string.IsNullOrWhiteSpace(matchResult.TicketId))
             {
+                // If ticket is null it might be due a limit exceeded error, retry before moving to next step
                 await responseStream.WriteAsync(CreateMatchStatusResponse("RateLimitExceeded"));
+                await Task.Delay(_multiplayerSettings.Token.TicketListWait);
+                matchResult = await _tokenService.GetMatch(username);
             }
 
             while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
@@ -87,8 +87,9 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)
         {
+            const string UnknownUser = "-";
             var dto = await _repository.GetMatch(request.MatchId);
-            while (dto == null)
+            while (dto.PlayerName == UnknownUser && dto.Challenger.Name == UnknownUser)
             {
                 await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
                 dto = await _repository.GetMatch(request.MatchId);
@@ -97,12 +98,15 @@ namespace RPSLS.Game.Api.GrpcServices
             var isMaster = dto.PlayerName == request.Username;
             var gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
             await responseStream.WriteAsync(gameStatus);
+            _logger.LogDebug($"{request.Username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
             while (!context.CancellationToken.IsCancellationRequested && gameStatus.Result == Result.Pending)
             {
                 await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
                 dto = await _repository.GetMatch(request.MatchId);
+
                 if (dto == null)
                 {
+                    _logger.LogDebug($"{request.Username} -> dto is null");
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
@@ -110,12 +114,14 @@ namespace RPSLS.Game.Api.GrpcServices
                 var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) > dto.WhenUtc;
                 if (isMaster && matchExpired)
                 {
+                    _logger.LogDebug($"{request.Username} -> match expired");
                     await _repository.DeleteMatch(request.MatchId);
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
 
                 gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
+                _logger.LogDebug($"{request.Username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
                 await responseStream.WriteAsync(gameStatus);
             }
         }
@@ -126,6 +132,8 @@ namespace RPSLS.Game.Api.GrpcServices
             if (!string.IsNullOrWhiteSpace(dto.ChallengerMove?.Text) && !string.IsNullOrWhiteSpace(dto.PlayerMove?.Text))
             {
                 var result = _gameService.Check(dto.PlayerMove.Value, dto.ChallengerMove.Value);
+                await _playFabService.UpdateStats(dto.PlayerName, dto.Result.Value == (int)Result.Player);
+                await _playFabService.UpdateStats(dto.Challenger.Name, dto.Result.Value == (int)Result.Challenger);
                 await _repository.SaveMatchResult(request.MatchId, result);
             }
 

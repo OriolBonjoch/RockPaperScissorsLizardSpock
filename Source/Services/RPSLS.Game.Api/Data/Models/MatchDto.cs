@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using RPSLS.Game.Api.Services;
 using System;
+using ProtoResult = GameApi.Proto.Result;
 
 namespace RPSLS.Game.Api.Data.Models
 {
@@ -46,6 +47,18 @@ namespace RPSLS.Game.Api.Data.Models
             dto.Challenger.Type = pick.PlayerType;
             dto.ChallengerMove.Text = pick.Text;
             dto.ChallengerMove.Value = pick.Value;
+            return dto;
+        }
+
+        public static MatchDto CreateMissing(string matchId)
+        {
+            var dto = new MatchDto();
+            dto.Challenger.Name = "-";
+            dto.Challenger.Type = "human";
+            dto.PlayFabMatchId = matchId;
+            dto.PlayerName = "-";
+            dto.Result.Winner = Enum.GetName(typeof(ProtoResult), ProtoResult.Challenger);
+            dto.Result.Value = (int) ProtoResult.Challenger;
             return dto;
         }
     }

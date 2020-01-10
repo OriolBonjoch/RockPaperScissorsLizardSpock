@@ -15,5 +15,11 @@ namespace RPSLS.Game.Multiplayer.Builders
             _product.CreateAccount = true;
             return this;
         }
+
+        public LoginWithCustomIDRequestBuilder WithAccountInfo()
+        {
+            _product.InfoRequestParameters.GetUserAccountInfo = true;
+            return this;
+        }
     }
 }

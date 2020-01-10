@@ -18,12 +18,12 @@ namespace RPSLS.Game.Multiplayer.Builders
             return this as T;
         }
 
-        public T WithUserContext(string playFabUserId, string token)
+        public T WithUserContext(string userTitleId, string token)
         {
             _product.AuthenticationContext = new PlayFab.PlayFabAuthenticationContext()
             {
                 EntityType = "title_player_account",
-                EntityId = playFabUserId,
+                EntityId = userTitleId,
                 EntityToken = token
             };
 

@@ -18,9 +18,9 @@ namespace RPSLS.Game.Multiplayer.Services
         private const string queueName = "rpsls_queue";
         private const string WinsStat = "Wins";
         private const string TotalStat = "Total";
+
         private readonly ILogger<PlayFabService> _logger;
         private readonly MultiplayerSettings _settings;
-        private DateTime? _expiration;
 
         public PlayFabService(ILogger<PlayFabService> logger, IOptions<MultiplayerSettings> settings)
         {
@@ -33,61 +33,56 @@ namespace RPSLS.Game.Multiplayer.Services
             PlayFabSettings.staticSettings.TitleId = _settings.Title;
             PlayFabSettings.staticSettings.DeveloperSecretKey = _settings.SecretKey;
 
-            await ValidateToken();
             await EnsureQueueExist();
             await EnsureLeaderBoardExists();
         }
 
-        protected string EntityToken { get; private set; }
-
-        public async Task ValidateToken()
+        public async Task<string> GetEntityToken(string userTitleId = null)
         {
-            if (_expiration != null)
-                if (_expiration.HasValue && _expiration.Value > DateTime.UtcNow) return;
+            var tokenRequestBuilder = new GetEntityTokenRequestBuilder();
+            if (!string.IsNullOrWhiteSpace(userTitleId))
+            {
+                tokenRequestBuilder.WithUserToken(userTitleId);
+            }
 
-            if (!string.IsNullOrWhiteSpace(EntityToken))
-                return;
-
-            var entityTokenRequest = new GetEntityTokenRequestBuilder().Build();
-            var entityTokenResult = await Call(PlayFabAuthenticationAPI.GetEntityTokenAsync, entityTokenRequest);
-            EntityToken = entityTokenResult.EntityToken;
-            _expiration = entityTokenResult.TokenExpiration;
+            var entityTokenResult = await Call(
+                PlayFabAuthenticationAPI.GetEntityTokenAsync,
+                tokenRequestBuilder);
+            return entityTokenResult.EntityToken;
         }
 
         public async Task<string> CreateTicket(string username, string token)
         {
-            await ValidateToken();
             var userEntity = await GetUserEntity(username);
-            var cancelRequest = new CancelAllMatchmakingTicketsForPlayerRequestBuilder()
-                .WithEntity(userEntity.Id, userEntity.Type)
-                .WithQueue(queueName)
-                .Build();
-            await Call(PlayFabMultiplayerAPI.CancelAllMatchmakingTicketsForPlayerAsync, cancelRequest);
 
-            // Create Matchmaking ticket
-            var matchRequest = new CreateMatchmakingTicketRequestBuilder()
-                .WithCreatorEntity(userEntity.Id, userEntity.Type, token)
-                .WithGiveUpOf(120)
-                .WithQueue(queueName)
-                .Build();
+            await Call(
+                PlayFabMultiplayerAPI.CancelAllMatchmakingTicketsForPlayerAsync,
+                new CancelAllMatchmakingTicketsForPlayerRequestBuilder()
+                    .WithEntity(userEntity.Id, userEntity.Type)
+                    .WithQueue(queueName));
 
-            var ticketResult = await Call(PlayFabMultiplayerAPI.CreateMatchmakingTicketAsync, matchRequest);
+            var ticketResult = await Call(
+                PlayFabMultiplayerAPI.CreateMatchmakingTicketAsync,
+                new CreateMatchmakingTicketRequestBuilder()
+                    .WithCreatorEntity(userEntity.Id, userEntity.Type, token)
+                    .WithGiveUpOf(120)
+                    .WithQueue(queueName));
+
             return ticketResult.TicketId;
         }
 
         public async Task<MatchResult> CheckTicketStatus(string username, string ticketId = null)
         {
-            await ValidateToken();
             var result = new MatchResult() { TicketId = ticketId ?? string.Empty };
             var userEntity = await GetUserEntity(username);
             if (string.IsNullOrWhiteSpace(ticketId))
             {
-                var listTicketsRequest = new ListMatchmakingTicketsForPlayerRequestBuilder()
-                    .WithEntity(userEntity.Id, userEntity.Type)
-                    .WithQueue(queueName)
-                    .Build();
+                var listTickets = await Call(
+                    PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync,
+                    new ListMatchmakingTicketsForPlayerRequestBuilder()
+                        .WithEntity(userEntity.Id, userEntity.Type)
+                        .WithQueue(queueName));
 
-                var listTickets = await Call(PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync, listTicketsRequest);
                 result.TicketId = listTickets?.TicketIds?.FirstOrDefault();
             }
 
@@ -96,25 +91,24 @@ namespace RPSLS.Game.Multiplayer.Services
                 return result;
             }
 
-            var matchTicketRequest = new GetMatchmakingTicketRequestBuilder()
-                .WithUserContext(userEntity.Id, EntityToken)
-                .WithQueue(queueName)
-                .WithTicketId(result.TicketId)
-                .Build();
+            var matchTicketResult = await Call(
+                PlayFabMultiplayerAPI.GetMatchmakingTicketAsync,
+                new GetMatchmakingTicketRequestBuilder()
+                    .WithQueue(queueName)
+                    .WithTicketId(result.TicketId));
 
-            var matchTicketResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingTicketAsync, matchTicketRequest);
             var status = matchTicketResult?.Status ?? string.Empty;
             result.Status = status;
             result.MatchId = matchTicketResult?.MatchId ?? string.Empty;
             if (result.Matched)
             {
-                var getMatchRequest = new GetMatchRequestBuilder()
-                    .WithId(result.MatchId)
-                    .WithQueue(queueName)
-                    .WithMemberAttributes()
-                    .Build();
+                var getMatchResult = await Call(
+                    PlayFabMultiplayerAPI.GetMatchAsync,
+                    new GetMatchRequestBuilder()
+                        .WithId(result.MatchId)
+                        .WithQueue(queueName)
+                        .WithMemberAttributes());
 
-                var getMatchResult = await Call(PlayFabMultiplayerAPI.GetMatchAsync, getMatchRequest);
                 var opponentEntity = getMatchResult.Members?.FirstOrDefault(u => u.Entity.Id != userEntity.Id);
                 if (opponentEntity != null)
                 {
@@ -125,96 +119,112 @@ namespace RPSLS.Game.Multiplayer.Services
             return result;
         }
 
-        public async Task UpdateStats(bool isWinner)
+        public async Task UpdateStats(string username, bool isWinner)
         {
-            await Call(PlayFabServerAPI.UpdatePlayerStatisticsAsync, null);
+            var userEntity = await GetUserEntity(username);
+            var entityTokenResult = await Call(
+                PlayFabAuthenticationAPI.GetEntityTokenAsync,
+                new GetEntityTokenRequestBuilder().WithUserToken(userEntity.Id));
+
+            var statsRequestBuilder = new UpdatePlayerStatisticsRequestBuilder()
+                .WithUserContext(userEntity.Id, entityTokenResult.EntityToken)
+                .WithStatsIncrease(TotalStat);
+
+            if (isWinner)
+            {
+                statsRequestBuilder.WithStatsIncrease(WinsStat);
+            }
+
+            await Call(PlayFabClientAPI.UpdatePlayerStatisticsAsync, statsRequestBuilder);
         }
 
         private async Task<EntityKey> GetUserEntity(string username)
         {
-            var loginRequest = new LoginWithCustomIDRequestBuilder()
-                .WithUser(username)
-                .CreateIfDoesntExist()
-                .Build();
+            var loginResult = await Call(
+                PlayFabClientAPI.LoginWithCustomIDAsync,
+                new LoginWithCustomIDRequestBuilder()
+                    .WithUser(username)
+                    .WithAccountInfo()
+                    .CreateIfDoesntExist());
 
-            var loginResult = await Call(PlayFabClientAPI.LoginWithCustomIDAsync, loginRequest);
             var userEntity = loginResult.EntityToken.Entity;
-            if (loginResult.NewlyCreated)
+            if (loginResult.NewlyCreated || loginResult.InfoResultPayload?.AccountInfo?.TitleInfo?.DisplayName != userEntity.Id)
             {
                 // Add a DisplayName to the title user so its easier to retrieve the twitter user;
-                var renameRequest = new UpdateUserTitleDisplayNameRequestBuilder()
-                    .WithName(username)
-                    .Build();
-
-                await Call(PlayFabClientAPI.UpdateUserTitleDisplayNameAsync, renameRequest);
+                await Call(
+                    PlayFabClientAPI.UpdateUserTitleDisplayNameAsync,
+                    new UpdateUserTitleDisplayNameRequestBuilder()
+                        .WithName(userEntity.Id));
             }
 
             return userEntity;
         }
 
-        private async Task<string> GetUsername(string titleId)
+        private async Task<string> GetUsername(string userTitleId)
         {
-            var getProfileRequest = new GetEntityProfileRequestBuilder()
-                .WithTitleEntity(titleId)
-                .WithTitleContext(_settings.Title, EntityToken)
-                .Build();
+            var getAccountResult = await Call(
+                PlayFabAdminAPI.GetUserAccountInfoAsync,
+                new LookupUserAccountInfoRequestBuilder()
+                    .WithTitleDisplay(userTitleId));
 
-            var profileResult = await Call(PlayFabProfilesAPI.GetProfileAsync, getProfileRequest);
-            var username = profileResult?.Profile?.DisplayName;
-            if (!string.IsNullOrWhiteSpace(username)) return username;
-
-            var playFabId = profileResult.Profile.Lineage.MasterPlayerAccountId;
-            var getAccountRequest = new GetAccountInfoRequestBuilder()
-                .WithPlayFabId(playFabId)
-                .Build();
-
-            var getAccountResult = await Call(PlayFabClientAPI.GetAccountInfoAsync, getAccountRequest);
-            username = getAccountResult.AccountInfo.TitleInfo.DisplayName;
+            var username = getAccountResult.UserInfo.CustomIdInfo.CustomId;
             return username ?? "Unknown";
         }
 
         private async Task EnsureQueueExist()
         {
-            var fetchQueueRequest = new GetMatchmakingQueueRequestBuilder()
-                .WithQueue(queueName)
-                .WithTitleContext(_settings.Title, EntityToken)
-                .Build();
+            var entityToken = await GetEntityToken();
+            var fetchQueueResult = await Call(
+                PlayFabMultiplayerAPI.GetMatchmakingQueueAsync,
+                new GetMatchmakingQueueRequestBuilder()
+                    .WithQueue(queueName)
+                    .WithTitleContext(_settings.Title, entityToken));
 
-            var fetchQueueResult = await Call(PlayFabMultiplayerAPI.GetMatchmakingQueueAsync, fetchQueueRequest);
             if (fetchQueueResult == null)
             {
                 // Create if queue does not exist
-                var queueRequest = new SetMatchmakingQueueRequestBuilder()
-                    .WithQueue(queueName, 2)
-                    .WithTitleContext(_settings.Title, EntityToken)
-                    .WithQueueStringRule("TokenRule", "Token", "random")
-                    .Build();
-
-                await Call(PlayFabMultiplayerAPI.SetMatchmakingQueueAsync, queueRequest);
+                await Call(
+                    PlayFabMultiplayerAPI.SetMatchmakingQueueAsync,
+                    new SetMatchmakingQueueRequestBuilder()
+                        .WithQueue(queueName, 2)
+                        .WithTitleContext(_settings.Title, entityToken)
+                        .WithQueueStringRule("TokenRule", "Token", "random"));
             }
         }
 
         private async Task EnsureLeaderBoardExists()
         {
-            await Call(
-                PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
-                new CreatePlayerStatisticDefinitionRequestBuilder()
-                    .WithAggregatedStat(WinsStat)
-                    .Build());
+            var statsResult = await Call(
+                PlayFabAdminAPI.GetPlayerStatisticDefinitionsAsync,
+                new GetPlayerStatisticDefinitionsRequestBuilder());
 
-            await Call(
-                PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
-                new CreatePlayerStatisticDefinitionRequestBuilder()
-                    .WithAggregatedStat(TotalStat)
-                    .Build());
+            if (statsResult?.Statistics?.FirstOrDefault(s => s.StatisticName == WinsStat) == null)
+            {
+                await Call(
+                    PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
+                    new CreatePlayerStatisticDefinitionRequestBuilder()
+                        .WithAggregatedStat(WinsStat));
+            }
+
+            if (statsResult?.Statistics?.FirstOrDefault(s => s.StatisticName == TotalStat) == null)
+            {
+                await Call(
+                    PlayFabAdminAPI.CreatePlayerStatisticDefinitionAsync,
+                    new CreatePlayerStatisticDefinitionRequestBuilder()
+                        .WithAggregatedStat(TotalStat));
+            }
         }
 
-        private async Task<U> Call<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, T request) where U : PlayFabResultCommon
-            => (await CallWithError(playFabCall, request)).Result;
+        private async Task<U> Call<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, BaseRequestBuilder<T> requestBuilder)
+            where U : PlayFabResultCommon
+            where T : new()
+            => (await CallWithError(playFabCall, requestBuilder)).Result;
 
-        private async Task<PlayFabResult<U>> CallWithError<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, T request) where U : PlayFabResultCommon
+        private async Task<PlayFabResult<U>> CallWithError<T, U>(Func<T, object, Dictionary<string, string>, Task<PlayFabResult<U>>> playFabCall, BaseRequestBuilder<T> requestBuilder)
+            where U : PlayFabResultCommon
+            where T : new()
         {
-            var taskResult = await playFabCall(request, null, null);
+            var taskResult = await playFabCall(requestBuilder.Build(), null, null);
             var apiError = taskResult.Error;
             if (apiError != null)
             {

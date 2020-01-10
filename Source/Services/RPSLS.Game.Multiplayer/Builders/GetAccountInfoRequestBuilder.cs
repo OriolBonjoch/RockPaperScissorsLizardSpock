@@ -9,5 +9,11 @@ namespace RPSLS.Game.Multiplayer.Builders
             _product.PlayFabId = playFabId;
             return this;
         }
+
+        public GetAccountInfoRequestBuilder WithDisplayName(string displayName)
+        {
+            _product.TitleDisplayName = displayName;
+            return this;
+        }
     }
 }

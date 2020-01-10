@@ -178,6 +178,7 @@ namespace RPSLS.Game.Api.Data
             dto.Challenger.Name = "-";
             dto.Challenger.Type = "human";
             dto.PlayFabMatchId = matchId;
+            dto.PlayerName = "-";
             dto.Result.Winner = Enum.GetName(typeof(Result), Result.Challenger);
             dto.Result.Value = (int) Result.Challenger;
             return dto;
