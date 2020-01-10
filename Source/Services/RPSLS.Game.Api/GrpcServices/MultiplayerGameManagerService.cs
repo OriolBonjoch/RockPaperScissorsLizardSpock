@@ -132,8 +132,8 @@ namespace RPSLS.Game.Api.GrpcServices
             if (!string.IsNullOrWhiteSpace(dto.ChallengerMove?.Text) && !string.IsNullOrWhiteSpace(dto.PlayerMove?.Text))
             {
                 var result = _gameService.Check(dto.PlayerMove.Value, dto.ChallengerMove.Value);
-                await _playFabService.UpdateStats(dto.PlayerName, dto.Result.Value == (int)Result.Player);
-                await _playFabService.UpdateStats(dto.Challenger.Name, dto.Result.Value == (int)Result.Challenger);
+                await _playFabService.UpdateStats(dto.PlayerName, result == Result.Player);
+                await _playFabService.UpdateStats(dto.Challenger.Name, result == Result.Challenger);
                 await _repository.SaveMatchResult(request.MatchId, result);
             }
 

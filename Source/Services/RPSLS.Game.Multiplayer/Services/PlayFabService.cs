@@ -121,13 +121,15 @@ namespace RPSLS.Game.Multiplayer.Services
 
         public async Task UpdateStats(string username, bool isWinner)
         {
-            var userEntity = await GetUserEntity(username);
-            var entityTokenResult = await Call(
-                PlayFabAuthenticationAPI.GetEntityTokenAsync,
-                new GetEntityTokenRequestBuilder().WithUserToken(userEntity.Id));
+            var loginResult = await Call(
+                PlayFabClientAPI.LoginWithCustomIDAsync,
+                new LoginWithCustomIDRequestBuilder()
+                    .WithUser(username)
+                    .WithAccountInfo()
+                    .CreateIfDoesntExist());
 
             var statsRequestBuilder = new UpdatePlayerStatisticsRequestBuilder()
-                .WithUserContext(userEntity.Id, entityTokenResult.EntityToken)
+                .WithPlayerId(loginResult.PlayFabId)
                 .WithStatsIncrease(TotalStat);
 
             if (isWinner)
@@ -135,7 +137,7 @@ namespace RPSLS.Game.Multiplayer.Services
                 statsRequestBuilder.WithStatsIncrease(WinsStat);
             }
 
-            await Call(PlayFabClientAPI.UpdatePlayerStatisticsAsync, statsRequestBuilder);
+            await Call(PlayFabServerAPI.UpdatePlayerStatisticsAsync, statsRequestBuilder);
         }
 
         private async Task<EntityKey> GetUserEntity(string username)

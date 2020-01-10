@@ -18,6 +18,11 @@ namespace RPSLS.Game.Multiplayer.Builders
 
         public LoginWithCustomIDRequestBuilder WithAccountInfo()
         {
+            if (_product.InfoRequestParameters == null)
+            {
+                _product.InfoRequestParameters = new GetPlayerCombinedInfoRequestParams();
+            }
+
             _product.InfoRequestParameters.GetUserAccountInfo = true;
             return this;
         }

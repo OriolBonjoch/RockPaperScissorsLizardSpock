@@ -1,10 +1,16 @@
-﻿using PlayFab.ClientModels;
+﻿using PlayFab.ServerModels;
 using System.Collections.Generic;
 
 namespace RPSLS.Game.Multiplayer.Builders
 {
     public class UpdatePlayerStatisticsRequestBuilder : PlayFabRequestCommonBuilder<UpdatePlayerStatisticsRequestBuilder, UpdatePlayerStatisticsRequest>
     {
+        public UpdatePlayerStatisticsRequestBuilder WithPlayerId(string playfabId)
+        {
+            _product.PlayFabId = playfabId;
+            return this;
+        }
+
         public UpdatePlayerStatisticsRequestBuilder WithStatsIncrease(string name)
         {
             if (_product.Statistics == null)
