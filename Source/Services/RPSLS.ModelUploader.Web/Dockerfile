@@ -20,7 +20,7 @@ RUN dotnet publish "RPSLS.ModelUploader.Web.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY ./initialModel /initialModel/
+COPY initialModel /initialModel/
 COPY entrypoint.sh .
 RUN chmod +x /app/entrypoint.sh
 CMD /app/entrypoint.sh
