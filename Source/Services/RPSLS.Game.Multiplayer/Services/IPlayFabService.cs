@@ -8,7 +8,7 @@ namespace RPSLS.Game.Multiplayer.Services
         Task Initialize();
         Task<string> GetEntityToken(string token = null);
         Task<string> CreateTicket(string username, string token = "random");
-        Task<MatchResult> CheckTicketStatus(string username, string ticketId = null);
+        Task<MatchResult> CheckTicketStatus(string username, string ticketId);
         Task UpdateStats(string username, bool isWinner);
     }
 }

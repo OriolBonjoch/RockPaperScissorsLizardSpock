@@ -9,14 +9,6 @@ service BotGameManager {
 	rpc DoPlay (GameRequest) returns (GameResponse);
 }
 
-service MultiplayerGameManager {
-	rpc CreatePairing (CreatePairingRequest) returns (CreatePairingResponse);
-	rpc JoinPairing (JoinPairingRequest) returns (Empty);
-	rpc PairingStatus (PairingStatusRequest) returns (stream PairingStatusResponse);
-	rpc Pick (PickRequest) returns (Empty);
-	rpc GameStatus (GameStatusRequest) returns (stream GameStatusResponse);
-}
-
 message Empty {}
 
 message ChallengerInfo {
@@ -54,13 +46,15 @@ message GameResponse {
 	bool isValid = 6;
 }
 
+service MultiplayerGameManager {
+	rpc CreatePairing (CreatePairingRequest) returns (stream PairingStatusResponse);
+	rpc JoinPairing (JoinPairingRequest) returns (stream PairingStatusResponse);
+	rpc Pick (PickRequest) returns (Empty);
+	rpc GameStatus (GameStatusRequest) returns (stream GameStatusResponse);
+}
 
 message CreatePairingRequest {
 	string username = 1;
-}
-
-message CreatePairingResponse {
-	string token = 1;
 }
 
 message JoinPairingRequest {
@@ -68,14 +62,10 @@ message JoinPairingRequest {
 	string token = 2;
 }
 
-message PairingStatusRequest {
-	string username = 1;
-	bool isMaster = 2;
-}
-
 message PairingStatusResponse {
 	string matchId = 1;
 	string status = 2;
+	string token = 3;
 }
 
 message PickRequest {

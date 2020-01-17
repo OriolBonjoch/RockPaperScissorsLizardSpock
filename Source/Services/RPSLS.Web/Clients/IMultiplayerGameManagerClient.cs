@@ -6,11 +6,9 @@ namespace RPSLS.Web.Clients
 {
     public interface IMultiplayerGameManagerClient
     {
-        Task<string> CreatePairing(string username);
+        Task<string> CreatePairing(string username, Action<string, string, string> matchIdCallback);
 
-        Task JoinPairing(string username, string token);
-
-        Task<MatchFoundDto> PairingStatus(string username, bool isMaster, Action<string, string> matchIdCallback);
+        Task<string> JoinPairing(string username, string token, Action<string, string, string> matchIdCallback);
 
         Task Pick(string matchId, string username, int pick);
 

@@ -71,31 +71,20 @@ namespace RPSLS.Game.Multiplayer.Services
             return ticketResult.TicketId;
         }
 
-        public async Task<MatchResult> CheckTicketStatus(string username, string ticketId = null)
+        public async Task<MatchResult> CheckTicketStatus(string username, string ticketId)
         {
-            var result = new MatchResult() { TicketId = ticketId ?? string.Empty };
-            var userEntity = await GetUserEntity(username);
+            var result = new MatchResult();
             if (string.IsNullOrWhiteSpace(ticketId))
-            {
-                var listTickets = await Call(
-                    PlayFabMultiplayerAPI.ListMatchmakingTicketsForPlayerAsync,
-                    new ListMatchmakingTicketsForPlayerRequestBuilder()
-                        .WithEntity(userEntity.Id, userEntity.Type)
-                        .WithQueue(queueName));
-
-                result.TicketId = listTickets?.TicketIds?.FirstOrDefault();
-            }
-
-            if (string.IsNullOrWhiteSpace(result.TicketId))
             {
                 return result;
             }
 
+            var userEntity = await GetUserEntity(username);
             var matchTicketResult = await Call(
                 PlayFabMultiplayerAPI.GetMatchmakingTicketAsync,
                 new GetMatchmakingTicketRequestBuilder()
                     .WithQueue(queueName)
-                    .WithTicketId(result.TicketId));
+                    .WithTicketId(ticketId));
 
             var status = matchTicketResult?.Status ?? string.Empty;
             result.Status = status;

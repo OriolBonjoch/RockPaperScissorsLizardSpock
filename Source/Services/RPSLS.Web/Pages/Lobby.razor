@@ -50,16 +50,19 @@
         }
 
         Username = state.User.Identity.Name;
-        Token = await Game.GetToken(Username);
-        TokenLink = $"{NavigationManager.BaseUri}api/token/{Token}";
         Timeout = false;
-        Status = GetStatusText("WaitingForPlayers");
-
-        _ = Game.WaitForMatchId(Username, ProcessMatchId);
+        _ = Game.FetchMatchId(Username, ProcessMatchId);
     }
 
-    private void ProcessMatchId(string matchId, string status)
+    private void ProcessMatchId(string matchId, string status, string token)
     {
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            Token = token;
+            TokenLink = $"{NavigationManager.BaseUri}api/token/{token}";
+            Status = GetStatusText("WaitingForPlayers");
+        }
+
         if (!string.IsNullOrWhiteSpace(matchId))
         {
             NavigationManager.NavigateTo($"/battle/multiplayer/{matchId}");
@@ -77,6 +80,7 @@
         {
             "Canceled" => "request cancelled",
             "Matched" => "starting match",
+            "TokenCreated" => "share the link",
             _ when status.StartsWith("Waiting") => "waiting opponent to join...",
             _ => status
         };

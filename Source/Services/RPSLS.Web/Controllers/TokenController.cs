@@ -45,9 +45,8 @@ namespace RPSLS.Web.Controllers
         public async Task<IActionResult> ValidateToken(string token)
         {
             var username = User.Identity.Name;
-            await _tokenManager.JoinPairing(username, token);
-            var matchFound = await _tokenManager.PairingStatus(username, false, (a, b) => { });
-            return Redirect($"{BATTLE_URL}/{matchFound.MatchId}");
+            var matchId = await _tokenManager.JoinPairing(username, token, (a, b, c) => { });
+            return Redirect($"{BATTLE_URL}/{matchId}");
         }
     }
 }
