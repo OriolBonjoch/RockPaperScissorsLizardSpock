@@ -16,12 +16,9 @@ namespace RPSLS.Web.Services
 
         public string MatchId { get; set; }
 
-        public Task<string> GetToken(string username) => _gameManager.CreatePairing(username);
-
-        public async Task WaitForMatchId(string username, Action<string, string> matchIdCallback)
+        public async Task FetchMatchId(string username, Action<string, string, string> matchIdCallback)
         {
-            var matchFound = await _gameManager.PairingStatus(username, true, matchIdCallback);
-            MatchId = matchFound.MatchId;
+            MatchId = await _gameManager.CreatePairing(username, matchIdCallback);
         }
 
         public async Task AddGameListener(string username, Action<ResultDto> gameListener)

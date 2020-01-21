@@ -46,43 +46,39 @@ namespace RPSLS.Game.Api.GrpcServices
             }
         }
 
-        public override async Task<CreatePairingResponse> CreatePairing(CreatePairingRequest request, ServerCallContext context)
+        public override async Task CreatePairing(CreatePairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
-            var token = await _tokenService.CreateToken(request.Username);
+            var token = _tokenService.GenerateToken();
+            var ticketId = await _playFabService.CreateTicket(request.Username, token);
             _logger.LogInformation($"New token created for user {request.Username}: {token}");
-            return new CreatePairingResponse() { Token = token };
-        }
+            await responseStream.WriteAsync(CreateMatchStatusResponse("TokenCreated", token));
 
-        public override async Task<Empty> JoinPairing(JoinPairingRequest request, ServerCallContext context)
-        {
-            await _tokenService.JoinToken(request.Username, request.Token);
-            return new Empty();
-        }
-
-        public override async Task PairingStatus(PairingStatusRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
-        {
-            var username = request.Username;
-            var matchResult = await _tokenService.GetMatch(username);
-            while (string.IsNullOrWhiteSpace(matchResult.TicketId))
-            {
-                // If ticket is null it might be due a limit exceeded error, retry before moving to next step
-                await responseStream.WriteAsync(CreateMatchStatusResponse("RateLimitExceeded"));
-                await Task.Delay(_multiplayerSettings.Token.TicketListWait);
-                matchResult = await _tokenService.GetMatch(username);
-            }
-
+            await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+            var matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
             while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
-                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status));
+                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token));
                 await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-                matchResult = await _tokenService.GetMatch(username, matchResult.TicketId);
+                matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
             }
 
-            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, matchResult.MatchId));
-            if (request.IsMaster)
+            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token, matchResult.MatchId));
+            await _repository.CreateMatch(matchResult.MatchId, request.Username, matchResult.Opponent);
+        }
+
+        public override async Task JoinPairing(JoinPairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
+        {
+            var ticketId = await _playFabService.CreateTicket(request.Username, request.Token);
+            await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+            var matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
+            while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
-                await _repository.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
+                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token));
+                await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+                matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
             }
+
+            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token, matchResult.MatchId));
         }
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)
@@ -140,11 +136,12 @@ namespace RPSLS.Game.Api.GrpcServices
             return new Empty();
         }
 
-        private static PairingStatusResponse CreateMatchStatusResponse(string status, string matchId = null)
+        private static PairingStatusResponse CreateMatchStatusResponse(string status, string token, string matchId = null)
             => new PairingStatusResponse()
             {
                 Status = status ?? string.Empty,
                 MatchId = matchId ?? string.Empty,
+                Token = token ?? string.Empty
             };
 
         private static GameStatusResponse CreateGameStatusForMaster(MatchDto match)
