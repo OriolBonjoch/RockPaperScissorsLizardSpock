@@ -49,6 +49,9 @@ services:
       - Challengers__2__Url=http://python.player:5000/
       - Challengers__3__Url=http://java.player:8080/
       - Challengers__4__Url=http://php.player/
+# TODO: remove playfab title credentials
+      - Multiplayer__Title=553C1
+      - Multiplayer__SecretKey=6J3PTBNOU6UASY9HRZTR35EKK19A3FINUTMFE7MZJ7EFNKE685
   web:
     ports:
       - "5100:80"

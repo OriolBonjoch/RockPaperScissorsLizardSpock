@@ -9,11 +9,12 @@ EXPOSE 80
 
 FROM ${sdkImage}:${sdkTag} AS build
 WORKDIR /src/project
-COPY . .
-RUN dotnet build "RPSLS.Game.Api.csproj" -c Release -o /app
+COPY . ./RPSLS.Game.Api/
+COPY ../RPSLS.Game.Multiplayer ./RPSLS.Game.Multiplayer/
+RUN dotnet build ./RPSLS.Game.Api -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish "RPSLS.Game.Api.csproj" -c Release -o /app
+RUN dotnet publish ./RPSLS.Game.Api -c Release -o /app
 
 FROM base AS final
 WORKDIR /app

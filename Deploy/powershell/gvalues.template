@@ -33,6 +33,9 @@ auth:
   twitter:
     key: {{twitterKey}}
     secret: {{twitterSecret}}
+  playfab:
+    title: {{playfabTitle}}
+    secret: {{playfabSecret}}
 
 # Autoscaling global settings
 hpa:
@@ -66,7 +69,3 @@ kv:
   name: {{kvName}}
   tenant: {{kvTenant}}
   clientid: {{kvClientId}}
-
-
-  
-  
