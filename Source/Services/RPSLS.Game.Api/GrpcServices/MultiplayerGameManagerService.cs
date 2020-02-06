@@ -15,6 +15,7 @@ namespace RPSLS.Game.Api.GrpcServices
     public class MultiplayerGameManagerService : MultiplayerGameManager.MultiplayerGameManagerBase
     {
         private const int FREE_TIER_MAX_REQUESTS = 10;
+        private const string UnknownUser = "-";
         private readonly GameStatusResponse _cancelledMatch = new GameStatusResponse { IsCancelled = true };
 
         private readonly IPlayFabService _playFabService;
@@ -83,7 +84,6 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)
         {
-            const string UnknownUser = "-";
             var dto = await _repository.GetMatch(request.MatchId);
             while (dto.PlayerName == UnknownUser && dto.Challenger.Name == UnknownUser)
             {
@@ -134,6 +134,46 @@ namespace RPSLS.Game.Api.GrpcServices
             }
 
             return new Empty();
+        }
+
+        public override async Task Rematch(RematchRequest request, IServerStreamWriter<RematchResponse> responseStream, ServerCallContext context)
+        {
+            var dto = await _repository.GetMatch(request.MatchId);
+            if (dto.Result.Value == (int)Result.Pending)
+            {
+                await _repository.SaveMatchChallenger(request.MatchId, request.Username);
+                await responseStream.WriteAsync(new RematchResponse { HasStarted = true });
+                return;
+            }
+
+            await _repository.CreateMatch(request.MatchId, request.Username, UnknownUser);
+            await responseStream.WriteAsync(new RematchResponse());
+            dto = await _repository.GetMatch(request.MatchId);
+            while (!context.CancellationToken.IsCancellationRequested && dto.Challenger.Name == UnknownUser)
+            {
+                await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
+                dto = await _repository.GetMatch(request.MatchId);
+
+                if (dto == null)
+                {
+                    _logger.LogDebug($"{request.Username} -> dto is null");
+                    //await responseStream.WriteAsync(new RematchResponse { IsCancelled = true });
+                    return;
+                }
+
+                var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) > dto.WhenUtc;
+                if (matchExpired)
+                {
+                    _logger.LogDebug($"{request.Username} -> rematch expired");
+                    await _repository.DeleteMatch(request.MatchId);
+                    //await responseStream.WriteAsync(new RematchResponse { IsCancelled = true });
+                    return;
+                }
+
+                await responseStream.WriteAsync(new RematchResponse());
+            }
+
+            await responseStream.WriteAsync(new RematchResponse { HasStarted = true });
         }
 
         private static PairingStatusResponse CreateMatchStatusResponse(string status, string token, string matchId = null)

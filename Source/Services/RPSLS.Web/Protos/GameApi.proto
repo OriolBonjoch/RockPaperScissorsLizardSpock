@@ -51,6 +51,7 @@ service MultiplayerGameManager {
 	rpc JoinPairing (JoinPairingRequest) returns (stream PairingStatusResponse);
 	rpc Pick (PickRequest) returns (Empty);
 	rpc GameStatus (GameStatusRequest) returns (stream GameStatusResponse);
+	rpc Rematch (RematchRequest) returns (stream RematchResponse);
 }
 
 message CreatePairingRequest {
@@ -89,4 +90,14 @@ message GameStatusResponse {
 	bool isCancelled = 6;
 	bool isMaster = 7;
 	bool isFinished = 8;
+}
+
+message RematchRequest {
+	string matchId = 1;
+	string username = 2;
+}
+
+message RematchResponse {
+	bool hasStarted = 1;
+	bool isCancelled = 2;
 }

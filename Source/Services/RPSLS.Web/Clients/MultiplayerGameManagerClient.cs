@@ -95,5 +95,25 @@ namespace RPSLS.Web.Clients
 
             return resultDto;
         }
+
+        public async Task<bool> Rematch(string matchId, string username)
+        {
+            var request = new RematchRequest()
+            {
+                MatchId = matchId,
+                Username = username
+            };
+
+            var channel = GrpcChannel.ForAddress(_serverUrl);
+            var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
+            using var stream = client.Rematch(request);
+            while (await stream.ResponseStream.MoveNext(CancellationToken.None))
+            {
+                var response = stream.ResponseStream.Current;
+                if (response.HasStarted) return true;
+            }
+
+            return false;
+        }
     }
 }

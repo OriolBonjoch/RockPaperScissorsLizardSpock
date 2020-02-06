@@ -29,8 +29,8 @@ services:
   game.api:
     image: ${REGISTRY:-msftrpsls}/game.api:${TAG:-latest}
     build:
-      context: ./Services/RPSLS.Game.Api/
-      dockerfile: Dockerfile
+      context: ./Services/
+      dockerfile: ./RPSLS.Game.Api/Dockerfile
     depends_on:
       - dotnet.player
       - node.player

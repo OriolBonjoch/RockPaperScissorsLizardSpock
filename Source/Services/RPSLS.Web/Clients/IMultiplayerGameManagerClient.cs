@@ -13,5 +13,7 @@ namespace RPSLS.Web.Clients
         Task Pick(string matchId, string username, int pick);
 
         Task<ResultDto> GameStatus(string matchId, string username, Action<ResultDto> gameListener);
+
+        Task<bool> Rematch(string matchId, string username);
     }
 }

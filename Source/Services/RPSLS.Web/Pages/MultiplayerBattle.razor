@@ -107,11 +107,9 @@ else
 
 @code
 {
-    [CascadingParameter]
-    ConsoleLayout Layout { get; set; }
+    [CascadingParameter] ConsoleLayout Layout { get; set; }
 
-    [Parameter]
-    public string MatchId { get; set; }
+    [Parameter] public string MatchId { get; set; }
 
     public string Username { get; set; } = "-";
     public bool IsTwitterUser { get; set; } = false;

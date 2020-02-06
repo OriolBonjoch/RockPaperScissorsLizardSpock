@@ -5,7 +5,14 @@
 @inject IBotGameService Game
 @inject NavigationManager NavigationManager
 
-<RPSLS.Web.Components.Results Game="Game" />
+<RPSLS.Web.Components.Results Game="Game">
+    <PlayAgainButton>
+        <a class="custom-button-link" href="/battle">play again</a>
+    </PlayAgainButton>
+    <ChooseOpponent>
+        <a class="custom-button-link challenger" href="/challenger">choose opponent</a>
+    </ChooseOpponent>
+</RPSLS.Web.Components.Results>
 
 @code
 {

@@ -5,14 +5,20 @@
 @inject IMultiplayerGameService Game
 @inject NavigationManager NavigationManager
 
-<RPSLS.Web.Components.Results Game="Game" />
+<RPSLS.Web.Components.Results Game="Game">
+    <PlayAgainButton>
+        <a class="custom-button-link" href="/rematch/multiplayer">play again</a>
+    </PlayAgainButton>
+    <ChooseOpponent>
+        <a class="custom-button-link challenger" href="/login/twitter">choose opponent</a>
+    </ChooseOpponent>
+</RPSLS.Web.Components.Results>
 
 @code
 {
     [CascadingParameter] ConsoleLayout Layout { get; set; }
 
-    [Parameter]
-    public string MatchId { get; set; }
+    public bool PlayAgainDisabled { get; set; } = false;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -26,7 +32,7 @@
     {
         if (Game.GameResult == null)
         {
-            NavigationManager.NavigateTo("/challenger");
+            NavigationManager.NavigateTo("/lobby");
             return;
         }
     }

@@ -26,9 +26,9 @@ namespace RPSLS.Web.Controllers
         {
             var redirect = $"{VALIDATE_URL}/{token}";
 
-            //// TODO: remove code
+            // TODO: remove code
             //var claims = new List<Claim> {
-            //    new Claim(ClaimTypes.Name, "Paco")
+            //    new Claim(ClaimTypes.Name, "surrealisra")
             //};
 
             //var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

@@ -31,5 +31,7 @@ namespace RPSLS.Web.Services
             Pick = pick;
             await _gameManager.Pick(MatchId, username, pick);
         }
+
+        public async Task<bool> Rematch(string username) => await _gameManager.Rematch(MatchId, username);
     }
 }

@@ -61,7 +61,21 @@ namespace RPSLS.Game.Api.Data
             var cResponse = await GetContainer();
             return cResponse.Container.GetItemLinqQueryable<MatchDto>()
                 .Where(m => m.PlayFabMatchId == matchId)
+                .OrderByDescending(m => m.WhenUtc)
                 .FirstOrDefault();
+        }
+
+        public async Task<MatchDto> SaveMatchChallenger(string matchId, string username)
+        {
+            var dto = await GetMatch(matchId);
+            dto.Challenger.Name = username;
+
+            _cacheService.UpdateMatch(dto);
+            if (_constr == null) return dto;
+            var cResponse = await GetContainer();
+
+            var result = await cResponse.Container.UpsertItemAsync(dto);
+            return result.Resource;
         }
 
         public async Task<MatchDto> SaveMatchPick(string matchId, string username, int pick)

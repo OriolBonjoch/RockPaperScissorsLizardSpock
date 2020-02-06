@@ -10,5 +10,6 @@ namespace RPSLS.Web.Services
         Task FetchMatchId(string username, Action<string, string, string> matchIdCallback);
         Task UserPick(string username, int pick);
         Task AddGameListener(string username, Action<ResultDto> gameListener);
+        Task<bool> Rematch(string username);
     }
 }

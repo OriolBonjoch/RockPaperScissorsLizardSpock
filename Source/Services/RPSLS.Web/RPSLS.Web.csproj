@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>d57ef403-e37d-42ec-9ffc-636e78ad7966</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-    <DockerfileContext>..\..</DockerfileContext>
+    <DockerfileContext>.</DockerfileContext>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,13 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RPSLS.Game.Multiplayer\RPSLS.Game.Multiplayer.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Protobuf Include="Protos\GameApi.proto" GrpcServices="Client" />
   </ItemGroup>
-  
-  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

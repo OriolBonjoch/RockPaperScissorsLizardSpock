@@ -18,7 +18,7 @@
     </div>
     <div class="custom-button-container">
         <div class="custom-button">
-            <a class="custom-button-link" href="/battle">play again</a>
+            @PlayAgainButton
         </div>
     </div>
 </div>
@@ -51,7 +51,7 @@
     </div>
     <div class="custom-button-container">
         <div class="custom-button">
-            <a class="custom-button-link challenger" href="/challenger">choose opponent</a>
+            @ChooseOpponent
         </div>
     </div>
 </div>
@@ -59,6 +59,10 @@
 @code
 {
     [Parameter] public IGameService Game { get; set; }
+
+    [Parameter] public RenderFragment PlayAgainButton { get; set; }
+
+    [Parameter] public RenderFragment ChooseOpponent { get; set; }
 
     ResultDto result = new ResultDto();
     string resultMessage = string.Empty;
