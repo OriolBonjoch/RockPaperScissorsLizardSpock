@@ -35,7 +35,7 @@ namespace RPSLS.Web.Clients
             return response.MatchId;
         }
 
-        public async Task<string> JoinPairing(string username, string token, Action<string, string, string> matchIdCallback)
+        public async Task<string> JoinPairing(string username, string token)
         {
             var request = new JoinPairingRequest() { Username = username, Token = token };
             var channel = GrpcChannel.ForAddress(_serverUrl);
@@ -45,7 +45,6 @@ namespace RPSLS.Web.Clients
             while (await stream.ResponseStream.MoveNext(CancellationToken.None))
             {
                 response = stream.ResponseStream.Current;
-                matchIdCallback(response.MatchId, response.Status, response.Token);
             }
 
             return response.MatchId;

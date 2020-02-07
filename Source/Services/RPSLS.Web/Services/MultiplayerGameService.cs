@@ -16,9 +16,16 @@ namespace RPSLS.Web.Services
 
         public string MatchId { get; set; }
 
-        public async Task FetchMatchId(string username, Action<string, string, string> matchIdCallback)
+        public async Task FetchMatchId(string username, bool isTwitter, Action<string, string, string> matchIdCallback)
         {
+            //var parsedUsername = isTwitter ? username : $".{username}";
             MatchId = await _gameManager.CreatePairing(username, matchIdCallback);
+        }
+
+        public async Task FetchMatchId(string username, bool isTwitter, string token)
+        {
+            //var parsedUsername = isTwitter ? username : $".{username}";
+            MatchId = await _gameManager.JoinPairing(username, token);
         }
 
         public async Task AddGameListener(string username, Action<ResultDto> gameListener)

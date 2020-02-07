@@ -11,10 +11,13 @@ FROM ${sdkImage}:${sdkTag} AS build
 WORKDIR /src/project
 COPY ./RPSLS.Game.Api ./RPSLS.Game.Api/
 COPY ./RPSLS.Game.Multiplayer ./RPSLS.Game.Multiplayer/
-RUN dotnet build ./RPSLS.Game.Api -c Release -o /app
+#COPY . .
+RUN dotnet build ./RPSLS.Game.Api/RPSLS.Game.Api.csproj -c Release -o /app
+#RUN dotnet build "RPSLS.Game.Api.csproj" -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish ./RPSLS.Game.Api -c Release -o /app
+RUN dotnet publish ./RPSLS.Game.Api/RPSLS.Game.Api.csproj -c Release -o /app
+#RUN dotnet publish "RPSLS.Game.Api.csproj" -c Release -o /app
 
 FROM base AS final
 WORKDIR /app

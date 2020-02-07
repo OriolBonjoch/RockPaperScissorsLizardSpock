@@ -13,17 +13,13 @@
             <form>
                 <img src='@("/assets/images/png/logo.png")'>
                 <div class="subtitle-container">
-                    <h2 class="subtitle">Play the geek version of rock-paper-scissors.</h2>
-                    <h2 class="subtitle">Share the link with your opponent</h2>
+                    <h2 class="subtitle">When the URL is ready,</h2>
+                    <h2 class="subtitle">send it to your friend</h2>
                 </div>
                 <input class="token-link" type="text" value="@TokenLink" readonly onclick="this.select();document.execCommand('copy');" />
+
                 <h2 class="wait-text">@Status</h2>
-                @if (Timeout)
-                {
-                    <div class="custom-button">
-                        <a class="custom-button-link" href="/challenger">Play against bots</a>
-                    </div>
-                }
+                <a class="secondary-link" href="/challenger">Play with a bot</a>
             </form>
         </div>
     </div>
@@ -39,19 +35,15 @@
     private string Token { get; set; }
     private string TokenLink { get; set; }
     public bool Timeout { get; set; }
-    public string Status { get; set; } = "creating link to share...";
+    public string Status { get; set; } = "Generating link...";
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (state.User.Identity.AuthenticationType != "Twitter")
-        {
-            NavigationManager.NavigateTo("/challenger");
-        }
-
         Username = state.User.Identity.Name;
         Timeout = false;
-        _ = Game.FetchMatchId(Username, ProcessMatchId);
+        var isTwitterAccount = state.User.Identity.AuthenticationType == "Twitter";
+        _ = Game.FetchMatchId(Username, isTwitterAccount, ProcessMatchId);
     }
 
     private void ProcessMatchId(string matchId, string status, string token)
@@ -59,7 +51,7 @@
         if (!string.IsNullOrWhiteSpace(token))
         {
             Token = token;
-            TokenLink = $"{NavigationManager.BaseUri}api/token/{token}";
+            TokenLink = $"{NavigationManager.BaseUri}invite/{token}";
             Status = GetStatusText("WaitingForPlayers");
         }
 
@@ -80,8 +72,8 @@
         {
             "Canceled" => "request cancelled",
             "Matched" => "starting match",
-            "TokenCreated" => "share the link",
-            _ when status.StartsWith("Waiting") => "waiting opponent to join...",
+            "TokenCreated" => "Waiting for the other player",
+            _ when status.StartsWith("Waiting") => "Waiting for the other player",
             _ => status
         };
     }

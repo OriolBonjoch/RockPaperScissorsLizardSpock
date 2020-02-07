@@ -29,7 +29,7 @@
 }
 
     .login-section .custom-button {
-        margin: 1rem 0rem;
+        margin: 1rem;
     }
 
     .login-section img {
@@ -144,7 +144,7 @@ form {
         }
 
         .login-section .subtitle {
-            font-size: 1.25rem;
+            font-size: 2.3rem;
         }
 
     .custom-button {

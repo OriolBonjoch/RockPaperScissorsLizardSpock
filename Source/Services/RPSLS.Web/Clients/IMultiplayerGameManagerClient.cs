@@ -8,7 +8,7 @@ namespace RPSLS.Web.Clients
     {
         Task<string> CreatePairing(string username, Action<string, string, string> matchIdCallback);
 
-        Task<string> JoinPairing(string username, string token, Action<string, string, string> matchIdCallback);
+        Task<string> JoinPairing(string username, string token);
 
         Task Pick(string matchId, string username, int pick);
 

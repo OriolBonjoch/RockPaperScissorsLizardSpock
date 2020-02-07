@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -12,15 +13,24 @@ namespace RPSLS.Web.Controllers
     [Route("api/[controller]")]
     public class AccountController : Controller
     {
-        private const string twitterRedirectUri = "/login/twitter";
-        private const string redirectUri = "/challenger";
+        private readonly ILogger<AccountController> _logger;
+        private const string REDIRECT_URI = "/";
+
+        public AccountController(ILogger<AccountController> logger)
+        {
+            _logger = logger;
+        }
 
         [HttpGet("login/twitter")]
-        public IActionResult ExternalLogin() =>
-            Challenge(new AuthenticationProperties { RedirectUri = twitterRedirectUri }, "Twitter");
+        public IActionResult ExternalLogin(string redirectUrl)
+        {
+            var properties = new AuthenticationProperties { RedirectUri = redirectUrl ?? REDIRECT_URI };
+            _logger.LogInformation($"Twitter login redirected to {properties.RedirectUri}");
+            return base.Challenge(properties, "Twitter");
+        }
 
         [HttpGet("login")]
-        public async Task<IActionResult> Login(string username)
+        public async Task<IActionResult> Login(string username, string redirectUrl)
         {
             var claims = new List<Claim> {
                 new Claim(ClaimTypes.Name, username)
@@ -29,7 +39,8 @@ namespace RPSLS.Web.Controllers
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(claimsIdentity);
             await HttpContext.SignInAsync(principal);
-            return Redirect(redirectUri);
+            _logger.LogInformation($"Cookies login redirected to {redirectUrl ?? REDIRECT_URI}");
+            return Redirect(redirectUrl ?? REDIRECT_URI);
         }
     }
 }
