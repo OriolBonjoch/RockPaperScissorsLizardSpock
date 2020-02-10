@@ -8,7 +8,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="console-screen">
-    <p class="console-text">@Username</p>
+    <p class="console-text">@Game.Username</p>
     <div class="user-picks">
         <div class="user-picks-container">
             @if (battleToBeStarted)
@@ -107,18 +107,18 @@ else
 
 @code
 {
-    [CascadingParameter] ConsoleLayout Layout { get; set; }
+    private bool battleToBeStarted = false;
+    private string userHandToShow = "rock";
+    private bool shakeHand = false;
+    private RPSLSViewModel[] picks;
 
-    [Parameter] public string MatchId { get; set; }
+    [CascadingParameter]
+    public ConsoleLayout Layout { get; set; }
 
-    public string Username { get; set; } = "-";
-    public bool IsTwitterUser { get; set; } = false;
+    [Parameter]
+    public string MatchId { get; set; }
+
     public RPSLSViewModel SelectedPick { get; set; }
-
-    bool battleToBeStarted = false;
-    string userHandToShow = "rock";
-    bool shakeHand = false;
-    RPSLSViewModel[] picks;
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -131,9 +131,8 @@ else
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User.Identity.Name;
-        IsTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-
+        Game.Username = state.User.Identity.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         Game.Pick = -1;
         Game.MatchId = MatchId;
         picks = new RPSLSViewModel[]
@@ -145,10 +144,10 @@ else
             new RPSLSViewModel { Text = "Spock", Value = 4, Image = "spock", BreakAfter = true  }
         };
 
-        _ = Game.AddGameListener(Username, Update);
+        _ = Game.AddGameListener(Update);
     }
 
-    void Update(ResultDto gameState)
+    private void Update(ResultDto gameState)
     {
         if (Game.Challenger == null)
         {
@@ -177,7 +176,7 @@ else
         }
     }
 
-    void SelectPick(RPSLSViewModel pick)
+    private void SelectPick(RPSLSViewModel pick)
     {
         SelectedPick = pick;
     }
@@ -197,6 +196,6 @@ else
 
     private async Task StartBattle()
     {
-        await Game.UserPick(Username, SelectedPick.Value);
+        await Game.UserPick(SelectedPick.Value);
     }
 }

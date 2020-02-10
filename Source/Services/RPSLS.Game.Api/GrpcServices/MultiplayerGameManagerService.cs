@@ -50,33 +50,35 @@ namespace RPSLS.Game.Api.GrpcServices
         public override async Task CreatePairing(CreatePairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
             var token = _tokenService.GenerateToken();
-            var ticketId = await _playFabService.CreateTicket(request.Username, token);
-            _logger.LogInformation($"New token created for user {request.Username}: {token}");
+            var username = GetUsername(request.Username, request.TwitterLogged);
+            var ticketId = await _playFabService.CreateTicket(username, token);
+            _logger.LogInformation($"New token created for user {username}: {token}");
             await responseStream.WriteAsync(CreateMatchStatusResponse("TokenCreated", token));
 
             await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-            var matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
+            var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
             while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
                 await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token));
                 await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-                matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
+                matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
             }
 
             await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token, matchResult.MatchId));
-            await _repository.CreateMatch(matchResult.MatchId, request.Username, matchResult.Opponent);
+            await _repository.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
         }
 
         public override async Task JoinPairing(JoinPairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
-            var ticketId = await _playFabService.CreateTicket(request.Username, request.Token);
+            var username = GetUsername(request.Username, request.TwitterLogged);
+            var ticketId = await _playFabService.CreateTicket(username, request.Token);
             await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-            var matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
+            var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
             while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
             {
                 await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token));
                 await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-                matchResult = await _playFabService.CheckTicketStatus(request.Username, ticketId);
+                matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
             }
 
             await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token, matchResult.MatchId));
@@ -84,6 +86,7 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)
         {
+            var username = GetUsername(request.Username, request.TwitterLogged);
             var dto = await _repository.GetMatch(request.MatchId);
             while (dto.PlayerName == UnknownUser && dto.Challenger.Name == UnknownUser)
             {
@@ -91,10 +94,10 @@ namespace RPSLS.Game.Api.GrpcServices
                 dto = await _repository.GetMatch(request.MatchId);
             }
 
-            var isMaster = dto.PlayerName == request.Username;
+            var isMaster = dto.PlayerName == username;
             var gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
             await responseStream.WriteAsync(gameStatus);
-            _logger.LogDebug($"{request.Username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
+            _logger.LogDebug($"{username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
             while (!context.CancellationToken.IsCancellationRequested && gameStatus.Result == Result.Pending)
             {
                 await Task.Delay(_multiplayerSettings.GameStatusUpdateDelay);
@@ -102,7 +105,7 @@ namespace RPSLS.Game.Api.GrpcServices
 
                 if (dto == null)
                 {
-                    _logger.LogDebug($"{request.Username} -> dto is null");
+                    _logger.LogDebug($"{username} -> dto is null");
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
@@ -110,14 +113,14 @@ namespace RPSLS.Game.Api.GrpcServices
                 var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) > dto.WhenUtc;
                 if (isMaster && matchExpired)
                 {
-                    _logger.LogDebug($"{request.Username} -> match expired");
+                    _logger.LogDebug($"{username} -> match expired");
                     await _repository.DeleteMatch(request.MatchId);
                     await responseStream.WriteAsync(_cancelledMatch);
                     return;
                 }
 
                 gameStatus = isMaster ? CreateGameStatusForMaster(dto) : CreateGameStatusForOpponent(dto);
-                _logger.LogDebug($"{request.Username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
+                _logger.LogDebug($"{username} -> Updated {gameStatus.User} vs {gameStatus.Challenger} /{gameStatus.UserPick}-{gameStatus.ChallengerPick}/");
                 await responseStream.WriteAsync(gameStatus);
             }
         }
@@ -157,7 +160,6 @@ namespace RPSLS.Game.Api.GrpcServices
                 if (dto == null)
                 {
                     _logger.LogDebug($"{request.Username} -> dto is null");
-                    //await responseStream.WriteAsync(new RematchResponse { IsCancelled = true });
                     return;
                 }
 
@@ -166,7 +168,6 @@ namespace RPSLS.Game.Api.GrpcServices
                 {
                     _logger.LogDebug($"{request.Username} -> rematch expired");
                     await _repository.DeleteMatch(request.MatchId);
-                    //await responseStream.WriteAsync(new RematchResponse { IsCancelled = true });
                     return;
                 }
 
@@ -175,6 +176,12 @@ namespace RPSLS.Game.Api.GrpcServices
 
             await responseStream.WriteAsync(new RematchResponse { HasStarted = true });
         }
+
+        private static string GetUsername(string username, bool twitterLogged) => twitterLogged ? username : $"${username}";
+
+        private static string GetUserDisplay(string username) => 
+            string.IsNullOrWhiteSpace(username) ? "-" :
+            (username.StartsWith('$') ? username.Substring(1) : username);
 
         private static PairingStatusResponse CreateMatchStatusResponse(string status, string token, string matchId = null)
             => new PairingStatusResponse()
@@ -188,9 +195,9 @@ namespace RPSLS.Game.Api.GrpcServices
         {
             return new GameStatusResponse
             {
-                User = match.PlayerName,
+                User = GetUserDisplay(match.PlayerName),
                 UserPick = match.PlayerMove.Value,
-                Challenger = match.Challenger?.Name ?? "-",
+                Challenger = GetUserDisplay(match.Challenger?.Name),
                 ChallengerPick = match.ChallengerMove.Value,
                 Result = (Result)match.Result.Value,
                 IsMaster = true,
@@ -210,9 +217,9 @@ namespace RPSLS.Game.Api.GrpcServices
 
             return new GameStatusResponse
             {
-                User = match.Challenger.Name,
+                User = GetUserDisplay(match.Challenger?.Name),
                 UserPick = match.ChallengerMove.Value,
-                Challenger = match.PlayerName ?? "-",
+                Challenger = GetUserDisplay(match.PlayerName),
                 ChallengerPick = match.PlayerMove.Value,
                 Result = result,
                 IsMaster = false,

@@ -19,9 +19,9 @@ namespace RPSLS.Web.Clients
             _serverUrl = settings.Value.Url ?? throw new ArgumentNullException("Game Manager Url is null");
         }
 
-        public async Task<string> CreatePairing(string username, Action<string, string, string> matchIdCallback)
+        public async Task<string> CreatePairing(string username, bool isTwitterUser, Action<string, string, string> matchIdCallback)
         {
-            var request = new CreatePairingRequest() { Username = username };
+            var request = new CreatePairingRequest() { Username = username, TwitterLogged = isTwitterUser };
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
             using var stream = client.CreatePairing(request, GetRequestMetadata());
@@ -35,9 +35,9 @@ namespace RPSLS.Web.Clients
             return response.MatchId;
         }
 
-        public async Task<string> JoinPairing(string username, string token)
+        public async Task<string> JoinPairing(string username, bool isTwitterUser, string token)
         {
-            var request = new JoinPairingRequest() { Username = username, Token = token };
+            var request = new JoinPairingRequest() { Username = username, Token = token, TwitterLogged = isTwitterUser };
             var channel = GrpcChannel.ForAddress(_serverUrl);
             var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
             using var stream = client.JoinPairing(request, GetRequestMetadata());
@@ -50,12 +50,13 @@ namespace RPSLS.Web.Clients
             return response.MatchId;
         }
 
-        public async Task Pick(string matchId, string username, int pick)
+        public async Task Pick(string matchId, string username, bool isTwitterUser, int pick)
         {
             var request = new PickRequest()
             {
                 MatchId = matchId,
                 Username = username,
+                TwitterLogged = isTwitterUser,
                 Pick = pick
             };
             var channel = GrpcChannel.ForAddress(_serverUrl);
@@ -63,12 +64,13 @@ namespace RPSLS.Web.Clients
             await client.PickAsync(request, GetRequestMetadata());
         }
 
-        public async Task<ResultDto> GameStatus(string matchId, string username, Action<ResultDto> gameListener)
+        public async Task<ResultDto> GameStatus(string matchId, string username, bool isTwitterUser, Action<ResultDto> gameListener)
         {
             var request = new GameStatusRequest()
             {
                 MatchId = matchId,
-                Username = username
+                Username = username,
+                TwitterLogged = isTwitterUser
             };
 
             var channel = GrpcChannel.ForAddress(_serverUrl);
@@ -95,12 +97,13 @@ namespace RPSLS.Web.Clients
             return resultDto;
         }
 
-        public async Task<bool> Rematch(string matchId, string username)
+        public async Task<bool> Rematch(string matchId, string username, bool isTwitterUser)
         {
             var request = new RematchRequest()
             {
                 MatchId = matchId,
-                Username = username
+                Username = username,
+                TwitterLogged = isTwitterUser
             };
 
             var channel = GrpcChannel.ForAddress(_serverUrl);

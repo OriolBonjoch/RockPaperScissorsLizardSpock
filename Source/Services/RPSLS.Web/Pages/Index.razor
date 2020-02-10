@@ -54,19 +54,20 @@
 
 @code
 {
-    const string BotsRedirect = "/challenger";
-    const string MultiplayerRedirect = "/lobby";
+    private const string BotsRedirect = "/challenger";
+    private const string MultiplayerRedirect = "/lobby";
+
+    [Parameter]
+    public string RedirectUrl { get; set; }
+
     public string Username { get; set; }
     public bool IsTwitterUser { get; set; }
-
-    [Parameter] public string RedirectUrl { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         Username = state.User?.Identity?.Name ?? string.Empty;
-        IsTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-
+        IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         if (!string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(RedirectUrl))
         {
             NavigationManager.NavigateTo(RedirectUrl);

@@ -14,7 +14,7 @@
 @inject IOptions<RecognitionSettings> options
 
 <div class="console-screen">
-    <p class="console-text">@Username</p>
+    <p class="console-text">@Game.Username</p>
     <div class="user-picks" id="cam-recorder">
         @if (battleToBeStarted)
         {
@@ -107,17 +107,15 @@ else
 
 @code
 {
-    private string Username = "-";
     private CancellationTokenSource cancellationTokenSource;
     private string guessImage = "";
-    string userHandToShow = "rock";
-    bool isTwitterUser = false;
-    bool shakeHand = false;
-    bool battleToBeStarted = false;
-    bool isChoiceTaken = false;
+    private string userHandToShow = "rock";
+    private bool shakeHand = false;
+    private bool battleToBeStarted = false;
+    private bool isChoiceTaken = false;
 
     [CascadingParameter]
-    ConsoleLayout Layout { get; set; }
+    public ConsoleLayout Layout { get; set; }
 
     [Parameter]
     public string MatchId { get; set; }
@@ -130,9 +128,8 @@ else
         }
 
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User.Identity.Name;
-        isTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-
+        Game.Username = state.User.Identity.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         Game.Pick = -1;
         cancellationTokenSource = new CancellationTokenSource();
     }
@@ -183,15 +180,15 @@ else
         NavigationManager.NavigateTo("/result/multiplayer");
     }
 
-    async Task StartBattle()
+    private async Task StartBattle()
     {
         if (Game.Pick == -1 || isChoiceTaken) return;
         isChoiceTaken = true;
-        await Game.UserPick(Username, Game.Pick);
+        await Game.UserPick(Game.Pick);
         cancellationTokenSource.Cancel();
     }
 
-    void Update(ResultDto gameState)
+    private void Update(ResultDto gameState)
     {
         if (Game.Challenger == null)
         {

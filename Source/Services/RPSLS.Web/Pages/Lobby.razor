@@ -31,19 +31,19 @@
 
 @code
 {
-    public string Username { get; set; }
     private string Token { get; set; }
     private string TokenLink { get; set; }
+
     public bool Timeout { get; set; }
     public string Status { get; set; } = "Generating link...";
 
     protected override async Task OnInitializedAsync()
     {
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User.Identity.Name;
+        Game.Username = state.User.Identity.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         Timeout = false;
-        var isTwitterAccount = state.User.Identity.AuthenticationType == "Twitter";
-        _ = Game.FetchMatchId(Username, isTwitterAccount, ProcessMatchId);
+        _ = Game.FetchMatchId(ProcessMatchId);
     }
 
     private void ProcessMatchId(string matchId, string status, string token)

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -26,7 +27,7 @@ namespace RPSLS.Web.Controllers
         {
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl ?? REDIRECT_URI };
             _logger.LogInformation($"Twitter login redirected to {properties.RedirectUri}");
-            return base.Challenge(properties, "Twitter");
+            return base.Challenge(properties, TwitterDefaults.AuthenticationScheme);
         }
 
         [HttpGet("login")]

@@ -33,8 +33,10 @@
         }
 
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var username = state.User.Identity.Name;
-        var rematchReplied = await Game.Rematch(username);
+        Game.Username = state.User.Identity.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
+
+        var rematchReplied = await Game.Rematch();
         var redirect = rematchReplied ? $"/battle/multiplayer/{Game.MatchId}" : "/lobby";
         NavigationManager.NavigateTo(redirect);
     }

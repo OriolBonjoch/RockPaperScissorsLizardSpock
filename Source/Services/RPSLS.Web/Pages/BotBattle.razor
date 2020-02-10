@@ -8,7 +8,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="console-screen">
-    <p class="console-text">@Username</p>
+    <p class="console-text">@Game.Username</p>
     <div class="user-picks">
         <div class="user-picks-container">
             @if (battleToBeStarted)
@@ -106,15 +106,14 @@ else
 
 @code
 {
-    [CascadingParameter] ConsoleLayout Layout { get; set; }
+    private bool battleToBeStarted = false;
+    private string userHandToShow = "rock";
+    private bool shakeHand = false;
+    private RPSLSViewModel pickedToPlay;
+    private RPSLSViewModel[] picks;
 
-    string Username = "-";
-    bool battleToBeStarted = false;
-    string userHandToShow = "rock";
-    bool shakeHand = false;
-    RPSLSViewModel pickedToPlay;
-    RPSLSViewModel[] picks;
-    bool isTwitterUser = false;
+    [CascadingParameter]
+    public ConsoleLayout Layout { get; set; }
 
     protected override void OnAfterRender(bool firstRender)
     {
@@ -133,10 +132,9 @@ else
         }
 
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User.Identity.Name;
-        isTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         Game.Pick = -1;
+        Game.Username = state.User.Identity.Name;
         picks = new RPSLSViewModel[]
         {
             new RPSLSViewModel { Text = "Rock", Value = 0, Image = "rock" },
@@ -158,7 +156,7 @@ else
         battleToBeStarted = true;
         shakeHand = true;
 
-        await Game.Play(Username, isTwitterUser);
+        await Game.Play();
         if (!Game.GameResult.IsValid)
         {
             shakeHand = false;

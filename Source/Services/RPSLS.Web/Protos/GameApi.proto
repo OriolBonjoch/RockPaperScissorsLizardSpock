@@ -21,12 +21,11 @@ message ChallengersList {
 	repeated ChallengerInfo challengers = 2;
 }
 
-
 message GameRequest {
 	string challenger = 1;
 	string username = 2;
-    int32 pick = 3;
-    bool twitterLogged = 4;
+    bool twitterLogged = 3;
+    int32 pick = 4;
 }
 
 enum Result
@@ -56,11 +55,13 @@ service MultiplayerGameManager {
 
 message CreatePairingRequest {
 	string username = 1;
+	bool twitterLogged = 2;
 }
 
 message JoinPairingRequest {
 	string username = 1;
-	string token = 2;
+	bool twitterLogged = 2;
+	string token = 3;
 }
 
 message PairingStatusResponse {
@@ -72,12 +73,14 @@ message PairingStatusResponse {
 message PickRequest {
 	string matchId = 1;
 	string username = 2;
-	int32 pick = 3;
+	bool twitterLogged = 3;
+	int32 pick = 4;
 }
 
 message GameStatusRequest {
 	string matchId = 1;
 	string username = 2;
+	bool twitterLogged = 3;
 }
 
 message GameStatusResponse {
@@ -95,6 +98,7 @@ message GameStatusResponse {
 message RematchRequest {
 	string matchId = 1;
 	string username = 2;
+	bool twitterLogged = 3;
 }
 
 message RematchResponse {

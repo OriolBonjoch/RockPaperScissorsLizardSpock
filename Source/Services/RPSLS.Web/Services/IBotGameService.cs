@@ -6,7 +6,7 @@ namespace RPSLS.Web.Services
 {
     public interface IBotGameService : IGameService
     {
-        Task Play(string username, bool isTwitterUser);
+        Task Play();
         Task<IEnumerable<ChallengerDto>> Challengers();
     }
 }

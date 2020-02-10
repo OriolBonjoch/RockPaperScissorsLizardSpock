@@ -21,7 +21,7 @@
 
                 <div class="sign_twitter">
                     @if (!string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerKey) &&
-                      !string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerSecret))
+                     !string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerSecret))
                     {
                         <span>or <a href="/api/account/login/twitter?redirectUrl=@RedirectUrl">Sign in with Twitter</a></span>
                     }
@@ -41,7 +41,9 @@
 
 @code
 {
-    [Parameter] public string Token { get; set; }
+    [Parameter]
+    public string Token { get; set; }
+
     public string RedirectUrl { get; set; }
     public string Username { get; set; }
 
@@ -49,15 +51,17 @@
     {
         RedirectUrl = $"/invite/{Token}";
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User?.Identity?.Name ?? string.Empty;
-        var isTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-        _ = JoinMatch(Username, isTwitterUser);
+        Game.Username = state.User?.Identity?.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
+        if (state.User.Identity.IsAuthenticated)
+        {
+            _ = JoinMatch();
+        }
     }
 
-    private async Task JoinMatch(string username, bool isTwitterUser)
+    private async Task JoinMatch()
     {
-        if (string.IsNullOrWhiteSpace(username)) return;
-        await Game.FetchMatchId(username, isTwitterUser, Token);
+        await Game.FetchMatchId(Token);
         NavigationManager.NavigateTo($"/battle/multiplayer/{Game.MatchId}");
     }
 }

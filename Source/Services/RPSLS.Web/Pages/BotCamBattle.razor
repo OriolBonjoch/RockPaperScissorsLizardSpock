@@ -14,7 +14,7 @@
 @inject IOptions<RecognitionSettings> options
 
     <div class="console-screen">
-        <p class="console-text">@Username</p>
+        <p class="console-text">@Game.Username</p>
         <div class="user-picks" id="cam-recorder">
             @if (battleToBeStarted)
             {
@@ -105,15 +105,14 @@ else
 
 @code
 {
-    private string Username = "-";
     private CancellationTokenSource cancellationTokenSource;
     private string guessImage = "";
-    string userHandToShow = "rock";
-    bool isTwitterUser = false;
-    bool shakeHand = false;
-    bool battleToBeStarted = false;
+    private string userHandToShow = "rock";
+    private bool shakeHand = false;
+    private bool battleToBeStarted = false;
 
-    [CascadingParameter] ConsoleLayout Layout { get; set; }
+    [CascadingParameter]
+    public ConsoleLayout Layout { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
@@ -123,9 +122,8 @@ else
         }
 
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        Username = state.User.Identity.Name;
-        isTwitterUser = state.User.Identity.AuthenticationType == "Twitter";
-
+        Game.Username = state.User.Identity.Name;
+        Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
         Game.Pick = -1;
         cancellationTokenSource = new CancellationTokenSource();
     }
@@ -168,7 +166,7 @@ else
         battleToBeStarted = true;
         shakeHand = true;
 
-        await Game.Play(Username, isTwitterUser);
+        await Game.Play();
         await Task.Delay(2000);
         shakeHand = false;
         userHandToShow = MapPick(Game.Pick);

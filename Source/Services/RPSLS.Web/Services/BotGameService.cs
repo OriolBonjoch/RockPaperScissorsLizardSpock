@@ -13,13 +13,13 @@ namespace RPSLS.Web.Services
             _gameManager = gameManager;
         }
 
-        public async Task Play(string username, bool isTwitterUser)
+        public async Task Play()
         {
             GameResult = await _gameManager.Play(
                Challenger.Name,
-               username,
+               Username,
                Pick,
-               isTwitterUser);
+               IsTwitterUser);
         }
 
         public Task<IEnumerable<ChallengerDto>> Challengers() => _gameManager.Challengers();

@@ -16,29 +16,27 @@ namespace RPSLS.Web.Services
 
         public string MatchId { get; set; }
 
-        public async Task FetchMatchId(string username, bool isTwitter, Action<string, string, string> matchIdCallback)
+        public async Task FetchMatchId(Action<string, string, string> matchIdCallback)
         {
-            //var parsedUsername = isTwitter ? username : $".{username}";
-            MatchId = await _gameManager.CreatePairing(username, matchIdCallback);
+            MatchId = await _gameManager.CreatePairing(Username, IsTwitterUser, matchIdCallback);
         }
 
-        public async Task FetchMatchId(string username, bool isTwitter, string token)
+        public async Task FetchMatchId(string token)
         {
-            //var parsedUsername = isTwitter ? username : $".{username}";
-            MatchId = await _gameManager.JoinPairing(username, token);
+            MatchId = await _gameManager.JoinPairing(Username, IsTwitterUser, token);
         }
 
-        public async Task AddGameListener(string username, Action<ResultDto> gameListener)
+        public async Task AddGameListener(Action<ResultDto> gameListener)
         {
-            await _gameManager.GameStatus(MatchId, username, gameListener);
+            await _gameManager.GameStatus(MatchId, Username, IsTwitterUser, gameListener);
         }
 
-        public async Task UserPick(string username, int pick)
+        public async Task UserPick(int pick)
         {
             Pick = pick;
-            await _gameManager.Pick(MatchId, username, pick);
+            await _gameManager.Pick(MatchId, Username, IsTwitterUser, pick);
         }
 
-        public async Task<bool> Rematch(string username) => await _gameManager.Rematch(MatchId, username);
+        public async Task<bool> Rematch() => await _gameManager.Rematch(MatchId, Username, IsTwitterUser);
     }
 }
