@@ -1,0 +1,39 @@
+﻿@layout MainLayout
+@page "/leaderboard"
+
+<div class="index-content">
+    <div class="login">
+        <div class="login-section">
+            <div>
+                <img src='@("/assets/images/png/logo.png")'>
+                <h1 class="leaderboard-title">LEADERBOARD</h1>
+                <ul class="leaderboard">
+                    @for (var i = 0; i < LeaderboardUsers.Count; i++)
+                    {
+                        <li>
+                            <span class="lb-position">#@(i + 1)</span>
+                            <span class="lb-user">@LeaderboardUsers[i].Item1</span>
+                            <span class="lb-points">@LeaderboardUsers[i].Item2</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="github">
+        <a class="github-text" target="_blank" href="https://github.com/microsoft/RockPaperScissorsLizardSpock">Get the code from GitHub</a>
+    </div>
+</div>
+
+<CookiesBanner />
+
+@code
+{
+    public List<(string, int)> LeaderboardUsers { get; set; } = new List<(string, int)>();
+
+    protected override void OnInitialized()
+    {
+        this.LeaderboardUsers = new List<(string, int)> { ("-", 0) };
+    }
+}

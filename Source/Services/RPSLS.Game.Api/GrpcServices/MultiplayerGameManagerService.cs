@@ -127,7 +127,8 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task<Empty> Pick(PickRequest request, ServerCallContext context)
         {
-            var dto = await _repository.SaveMatchPick(request.MatchId, request.Username, request.Pick);
+            var username = GetUsername(request.Username, request.TwitterLogged);
+            var dto = await _repository.SaveMatchPick(request.MatchId, username, request.Pick);
             if (!string.IsNullOrWhiteSpace(dto.ChallengerMove?.Text) && !string.IsNullOrWhiteSpace(dto.PlayerMove?.Text))
             {
                 var result = _gameService.Check(dto.PlayerMove.Value, dto.ChallengerMove.Value);
@@ -141,15 +142,16 @@ namespace RPSLS.Game.Api.GrpcServices
 
         public override async Task Rematch(RematchRequest request, IServerStreamWriter<RematchResponse> responseStream, ServerCallContext context)
         {
+            var username = GetUsername(request.Username, request.TwitterLogged);
             var dto = await _repository.GetMatch(request.MatchId);
             if (dto.Result.Value == (int)Result.Pending)
             {
-                await _repository.SaveMatchChallenger(request.MatchId, request.Username);
+                await _repository.SaveMatchChallenger(request.MatchId, username);
                 await responseStream.WriteAsync(new RematchResponse { HasStarted = true });
                 return;
             }
 
-            await _repository.CreateMatch(request.MatchId, request.Username, UnknownUser);
+            await _repository.CreateMatch(request.MatchId, username, UnknownUser);
             await responseStream.WriteAsync(new RematchResponse());
             dto = await _repository.GetMatch(request.MatchId);
             while (!context.CancellationToken.IsCancellationRequested && dto.Challenger.Name == UnknownUser)
@@ -159,14 +161,14 @@ namespace RPSLS.Game.Api.GrpcServices
 
                 if (dto == null)
                 {
-                    _logger.LogDebug($"{request.Username} -> dto is null");
+                    _logger.LogDebug($"{username} -> dto is null");
                     return;
                 }
 
                 var matchExpired = DateTime.UtcNow.AddSeconds(-_multiplayerSettings.GameStatusMaxWait) > dto.WhenUtc;
                 if (matchExpired)
                 {
-                    _logger.LogDebug($"{request.Username} -> rematch expired");
+                    _logger.LogDebug($"{username} -> rematch expired");
                     await _repository.DeleteMatch(request.MatchId);
                     return;
                 }
