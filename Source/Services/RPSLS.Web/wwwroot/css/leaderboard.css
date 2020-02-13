@@ -1,4 +1,20 @@
-﻿.leaderboard-container {
+﻿.lb-astronaut {
+    position: absolute;
+    width: 130px;
+    height: auto;
+    left: calc(-560px + 50vw);
+    top: 50px;
+}
+
+.lb-spaceship {
+    position: absolute;
+    width: 120px;
+    height: auto;
+    left: calc(-640px + 50vw);
+    top: 300px;
+}
+
+.leaderboard-container {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -37,95 +53,101 @@
 }
 
 .leaderboard {
+    margin-top: 20px;
+    font-family: "Work Sans";
+    font-weight: 500;
+    font-size: 1.5rem;
     color: white;
-    height: calc(100% - 250px);
-    overflow: auto;
-    padding: 0 10px;
+    border-spacing: 0;
+    height: calc(100% - 270px);
+    table-layout: fixed;
 }
 
-    .leaderboard ul {
-        list-style: none;
-        font-family: "Work Sans";
-        font-weight: 500;
-        font-size: 1.5rem;
-        display: grid;
-        grid-template-columns: 2fr 5fr 4fr;
-        grid-gap: 0;
-        justify-items: stretch;
+    .leaderboard tbody {
+        overflow: auto;
+        height: calc(100% - 50px);
+    }
+
+        .leaderboard tbody::-webkit-scrollbar-track {
+            display: none;
+        }
+
+        .leaderboard tbody::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .leaderboard tbody::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+        }
+
+    .leaderboard thead {
+        height: 50px;
+    }
+
+    .leaderboard thead,
+    .leaderboard tbody {
+        display: block;
+        padding: 0 10px;
+    }
+
+    .leaderboard tr th {
+        line-height: 30px;
+        font-family: "Voyager";
+        font-weight: 300;
+        border-bottom: white solid 2px;
+        padding-bottom: 10px;
+    }
+
+    .leaderboard tr td {
+        line-height: 60px;
+        height: 60px;
+        border-bottom: rgba(255, 255, 255, 0.3) solid 2px;
+    }
+
+    .leaderboard tr .lb-position {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        width: 140px;
         align-items: center;
     }
 
-    .leaderboard li {
-        border-bottom: rgba(255, 255, 255, 0.3) solid 2px;
-        width: 100%;
-        line-height: 60px;
-        height: 60px;
-        position: relative;
+        .leaderboard tr .lb-position > * {
+            display: block;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+        }
+
+    .leaderboard tr:nth-child(1) td.lb-position > * {
+        background-color: #E68F2F;
     }
 
-        .leaderboard li.lb-header {
-            height: 30px;
-            line-height: 30px;
-            font-family: "Voyager";
-            font-weight: 300;
-            border-bottom: white solid 2px;
-            padding-bottom: 10px;
-            align-self: end;
-        }
-
-        .leaderboard li.lb-position {
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-            .leaderboard li.lb-position > * {
-                display: block;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                line-height: 40px;
-            }
-
-            .leaderboard li.lb-position:nth-child(4) > * {
-                background-color: #E68F2F;
-            }
-
-            .leaderboard li.lb-position:nth-child(7) > * {
-                background-color: #F2455E;
-            }
-
-            .leaderboard li.lb-position:nth-child(10) > * {
-                background-color: #6251A7;
-            }
-
-        .leaderboard li.lb-user {
-            text-align: left;
-            text-overflow: ellipsis;
-            overflow: hidden;
-        }
-
-            .leaderboard li.lb-user > * {
-                padding: 0 10px;
-            }
-
-        .leaderboard li.lb-points {
-            text-align: center;
-            justify-self: center;
-        }
-
-    .leaderboard::-webkit-scrollbar-track {
-        display: none;
+    .leaderboard tr:nth-child(2) td.lb-position > * {
+        background-color: #F2455E;
     }
 
-    .leaderboard::-webkit-scrollbar {
-        width: 12px;
+    .leaderboard tr:nth-child(3) td.lb-position > * {
+        background-color: #6251A7;
     }
 
-    .leaderboard::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 6px;
+    .leaderboard tr .lb-user {
+        width: 340px;
+        text-align: left;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+
+        .leaderboard tr .lb-user > * {
+            padding: 0 10px;
+        }
+
+    .leaderboard tr .lb-points {
+        width: 280px;
+        text-align: center;
+        justify-self: center;
     }
 
 .leaderboard-buttons {

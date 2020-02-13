@@ -4,46 +4,30 @@
 @inject IMultiplayerGameService Game
 
 <div class="index-content">
+    <img class="lb-astronaut" src="/assets/images/png/astronaut-bg.png" />
+    <img class="lb-spaceship" src="/assets/images/png/spaceship-bg.png" />
     <div class="leaderboard-container">
         <h1 class="leaderboard-title">THE LEADERBOARD</h1>
         <h2 class="leaderboard-subtitle">Only Twitter users will be shown on the leaderboard.</h2>
-        <div class="leaderboard">
-            <ul>
-                <li class="lb-header lb-position">Position</li>
-                <li class="lb-header lb-user">Name</li>
-                <li class="lb-header lb-points">Number of wins</li>
+        <table class="leaderboard">
+            <thead>
+                <tr>
+                    <th class="lb-position">Position</th>
+                    <th class="lb-user">Name</th>
+                    <th class="lb-points">Number of wins</th>
+                </tr>
+            </thead>
+            <tbody>
                 @foreach (var player in Board.Players)
                 {
-                    <li class="lb-position"><span>@player.Position.ToString("00")</span></li>
-                    <li class="lb-user"><span>@player.Username</span></li>
-                    <li class="lb-points">@player.Score</li>
+                    <tr>
+                        <td class="lb-position"><span>@player.Position.ToString("00")</span></td>
+                        <td class="lb-user"><span>@player.Username</span></td>
+                        <td class="lb-points">@player.Score</td>
+                    </tr>
                 }
-                @foreach (var player in Board.Players)
-                {
-                    <li class="lb-position"><span>@player.Position.ToString("00")</span></li>
-                    <li class="lb-user"><span>@player.Username</span></li>
-                    <li class="lb-points">@player.Score</li>
-                }
-                @foreach (var player in Board.Players)
-                {
-                    <li class="lb-position"><span>@player.Position.ToString("00")</span></li>
-                    <li class="lb-user"><span>@player.Username</span></li>
-                    <li class="lb-points">@player.Score</li>
-                }
-                @foreach (var player in Board.Players)
-                {
-                    <li class="lb-position"><span>@player.Position.ToString("00")</span></li>
-                    <li class="lb-user"><span>@player.Username</span></li>
-                    <li class="lb-points">@player.Score</li>
-                }
-                @foreach (var player in Board.Players)
-                {
-                    <li class="lb-position"><span>@player.Position.ToString("00")</span></li>
-                    <li class="lb-user"><span>@player.Username</span></li>
-                    <li class="lb-points">@player.Score</li>
-                }
-            </ul>
-        </div>
+            </tbody>
+        </table>
         <div class="leaderboard-buttons">
             <div class="custom-button">
                 <a class="custom-button-link" href="/">play again</a>
@@ -62,10 +46,7 @@
     {
         this.Board = new LeaderboardDto
         {
-            Players = new List<LeaderboardEntryDto>
-        {
-                new LeaderboardEntryDto{ Username = "-", Score = 0 }
-            }
+            Players = new List<LeaderboardEntryDto>()
         };
 
         this.Board = await Game.GetLeaderboard();

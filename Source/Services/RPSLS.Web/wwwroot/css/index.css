@@ -11,7 +11,8 @@
 
 /* Leaderboard link */
 .leaderboard-link {
-    height: 50px;
+    height: 30px;
+    margin-top: 20px;
     margin-left: 50%;
     color: white;
     font-family: Voyager;

@@ -30,7 +30,9 @@ inf:
     java: "app=java-player"
 
 multiplayer:
-  onlytwitterleaderboard: true
+  leaderboard:
+    onlytwitter: true
+    top: 30
 
 auth:
   twitter:
