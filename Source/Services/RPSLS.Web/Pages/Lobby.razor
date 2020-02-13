@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IJSRuntime JsRuntime
+@inject GameSettingsDto GameSettings
 
 <div class="index-content">
     <div class="login">
@@ -39,6 +40,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!GameSettings.HasMultiplayer)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         Game.Username = state.User.Identity.Name;
         Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;

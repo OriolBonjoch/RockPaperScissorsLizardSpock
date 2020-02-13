@@ -6,6 +6,7 @@
 @inject IBotGameService Game
 @inject SvgHelper svgHelper
 @inject NavigationManager NavigationManager
+@inject GameSettingsDto GameSettings
 
 <div class="challengers-content">
     <h1 class="challengers-content-title">choose your opponent</h1>
@@ -27,7 +28,10 @@
             <div class="custom-button challengers-select-button">
                 <a class="custom-button-link" href="@battleUrl">Select</a>
             </div>
-            <a class="secondary-link" href="/lobby">Play with a friend</a>
+            @if (GameSettings.HasMultiplayer)
+            {
+                <a class="secondary-link" href="/lobby">Play with a friend</a>
+            }
         </div>
     </div>
 </div>

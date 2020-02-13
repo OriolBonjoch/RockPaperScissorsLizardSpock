@@ -52,8 +52,6 @@ services:
       - Multiplayer__Leaderboard__OnlyTwitter=false
       - Multiplayer__Leaderboard__Top=30
 # TODO: remove playfab title credentials
-      - Multiplayer__Title=553C1
-      - Multiplayer__SecretKey=6J3PTBNOU6UASY9HRZTR35EKK19A3FINUTMFE7MZJ7EFNKE685
   web:
     ports:
       - "5100:80"

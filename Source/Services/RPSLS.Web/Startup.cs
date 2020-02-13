@@ -49,10 +49,16 @@ namespace RPSLS.Web
             services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
             services.AddScoped<IBotGameManagerClient, BotGameManagerClient>();
             services.AddScoped<IMultiplayerGameManagerClient, MultiplayerGameManagerClient>();
+            services.AddScoped<IConfigurationManagerClient, ConfigurationManagerClient>();
             services.AddScoped<IBotGameService, BotGameService>();
             services.AddScoped<IMultiplayerGameService, MultiplayerGameService>();
             services.AddScoped<SvgHelper>();
             services.AddScoped<BattleHelper>();
+
+            services.AddSingleton(sp =>
+            {
+                return sp.GetService<IConfigurationManagerClient>().GetSettings();
+            });
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

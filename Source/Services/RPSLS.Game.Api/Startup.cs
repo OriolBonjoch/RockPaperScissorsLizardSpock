@@ -63,6 +63,7 @@ namespace RPSLS.Game.Api
             {
                 endpoints.MapGrpcService<BotGameManagerService>();
                 endpoints.MapGrpcService<MultiplayerGameManagerService>();
+                endpoints.MapGrpcService<ConfigurationManagerService>();
                 endpoints.MapControllers();
             });
         }

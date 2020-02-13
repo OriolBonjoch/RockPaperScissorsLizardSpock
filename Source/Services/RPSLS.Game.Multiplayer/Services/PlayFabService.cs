@@ -22,6 +22,8 @@ namespace RPSLS.Game.Multiplayer.Services
         private readonly ILogger<PlayFabService> _logger;
         private readonly MultiplayerSettings _settings;
 
+        public bool HasCredentials { get => !string.IsNullOrWhiteSpace(_settings.Title) && !string.IsNullOrWhiteSpace(_settings.SecretKey); }
+
         public PlayFabService(ILogger<PlayFabService> logger, IOptions<MultiplayerSettings> settings)
         {
             _logger = logger;
@@ -32,6 +34,8 @@ namespace RPSLS.Game.Multiplayer.Services
         {
             PlayFabSettings.staticSettings.TitleId = _settings.Title;
             PlayFabSettings.staticSettings.DeveloperSecretKey = _settings.SecretKey;
+
+            if (!HasCredentials) return;
 
             await EnsureQueueExist();
             await EnsureLeaderBoardExists();

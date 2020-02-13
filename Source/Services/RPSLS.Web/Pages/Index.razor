@@ -4,6 +4,7 @@
 @inject IOptions<TwitterOptions> TwitterOptions
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject GameSettingsDto GameSettings
 
 <div class="index-content">
     <div class="login">
@@ -42,9 +43,12 @@
                     <div class="custom-button">
                         <button type="button" @onclick="PlayAgainstBots" class="custom-button-link">Play with a bot</button>
                     </div>
-                    <div class="custom-button">
-                        <button type="button" @onclick="PlayAgainstHumans" class="custom-button-link">Play with a friend</button>
-                    </div>
+                    @if (GameSettings.HasMultiplayer)
+                    {
+                        <div class="custom-button">
+                            <button type="button" @onclick="PlayAgainstHumans" class="custom-button-link">Play with a friend</button>
+                        </div>
+                    }
                 </div>
             </form>
         </div>

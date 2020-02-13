@@ -5,6 +5,7 @@ namespace RPSLS.Game.Multiplayer.Services
 {
     public interface IPlayFabService
     {
+        bool HasCredentials { get; }
         Task Initialize();
         Task<string> GetEntityToken(string token = null);
         Task<string> CreateTicket(string username, string token = "random");
