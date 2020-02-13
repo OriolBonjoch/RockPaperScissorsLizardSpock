@@ -23,7 +23,7 @@ namespace RPSLS.Web.Controllers
         }
 
         [HttpGet("login/twitter")]
-        public IActionResult ExternalLogin(string redirectUrl)
+        public IActionResult ExternalLogin([FromQuery]string redirectUrl)
         {
             var properties = new AuthenticationProperties { RedirectUri = redirectUrl ?? REDIRECT_URI };
             _logger.LogInformation($"Twitter login redirected to {properties.RedirectUri}");
@@ -31,7 +31,7 @@ namespace RPSLS.Web.Controllers
         }
 
         [HttpGet("login")]
-        public async Task<IActionResult> Login(string username, string redirectUrl)
+        public async Task<IActionResult> Login([FromQuery]string username, [FromQuery]string redirectUrl)
         {
             var claims = new List<Claim> {
                 new Claim(ClaimTypes.Name, username)

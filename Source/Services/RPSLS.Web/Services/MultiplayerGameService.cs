@@ -1,6 +1,7 @@
 ﻿using RPSLS.Web.Clients;
 using RPSLS.Web.Models;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RPSLS.Web.Services
@@ -38,5 +39,18 @@ namespace RPSLS.Web.Services
         }
 
         public async Task<bool> Rematch() => await _gameManager.Rematch(MatchId, Username, IsTwitterUser);
+        public async Task<LeaderboardDto> GetLeaderboard()
+        {
+            var leaderboard = await _gameManager.GetLeaderboard();
+            return new LeaderboardDto()
+            {
+                Players = leaderboard.Players.Select((p, i) => new LeaderboardEntryDto
+                {
+                    Position = i + 1,
+                    Username = p.Username,
+                    Score = p.Score
+                })
+            };
+        }
     }
 }

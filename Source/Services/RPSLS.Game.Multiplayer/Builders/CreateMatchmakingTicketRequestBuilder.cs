@@ -4,7 +4,7 @@ namespace RPSLS.Game.Multiplayer.Builders
 {
     public class CreateMatchmakingTicketRequestBuilder : PlayFabRequestCommonBuilder<CreateMatchmakingTicketRequestBuilder, CreateMatchmakingTicketRequest>
     {
-        public CreateMatchmakingTicketRequestBuilder WithCreatorEntity(string id, string type, string token)
+        public CreateMatchmakingTicketRequestBuilder WithCreatorEntity(string id, string type, string token, string displayName)
         {
             _product.Creator = new MatchmakingPlayer()
             {
@@ -17,7 +17,8 @@ namespace RPSLS.Game.Multiplayer.Builders
                 {
                     DataObject = new
                     {
-                        Token = token
+                        Token = token,
+                        DisplayName = displayName
                     }
                 }
             };

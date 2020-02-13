@@ -14,8 +14,7 @@
             @foreach (var challenger in challengers)
             {
                 var active = challenger.Name == Game.Challenger?.Name;
-                <div class="lang-card @(active ? "active" : string.Empty) @(challenger.Name)"
-                        @onclick="() => SelectChallenger(challenger)">
+                <div class="lang-card @(active ? "active" : string.Empty) @(challenger.Name)" @onclick="() => SelectChallenger(challenger)">
 
                     <div class="lang-icon challenger-svg">
                         <img src='@("/assets/images/png/"+challenger.Name+".png")'>
@@ -28,6 +27,7 @@
             <div class="custom-button challengers-select-button">
                 <a class="custom-button-link" href="@battleUrl">Select</a>
             </div>
+            <a class="secondary-link" href="/lobby">Play with a friend</a>
         </div>
     </div>
 </div>

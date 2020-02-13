@@ -64,7 +64,7 @@ namespace RPSLS.Game.Multiplayer.Services
             var ticketResult = await Call(
                 PlayFabMultiplayerAPI.CreateMatchmakingTicketAsync,
                 new CreateMatchmakingTicketRequestBuilder()
-                    .WithCreatorEntity(userEntity.Id, userEntity.Type, token)
+                    .WithCreatorEntity(userEntity.Id, userEntity.Type, token, username)
                     .WithGiveUpOf(120)
                     .WithQueue(queueName));
 
@@ -101,7 +101,12 @@ namespace RPSLS.Game.Multiplayer.Services
                 var opponentEntity = getMatchResult.Members?.FirstOrDefault(u => u.Entity.Id != userEntity.Id);
                 if (opponentEntity != null)
                 {
-                    result.Opponent = await GetUsername(opponentEntity.Entity.Id);
+                    result.Opponent = "Unknown";
+                    var dataObject = opponentEntity.Attributes.DataObject as PlayFab.Json.JsonObject;
+                    if (dataObject != null && dataObject.TryGetValue("DisplayName", out object displayName))
+                    {
+                        result.Opponent = displayName?.ToString() ?? "Unknown";
+                    }
                 }
             }
 
@@ -110,6 +115,12 @@ namespace RPSLS.Game.Multiplayer.Services
 
         public async Task UpdateStats(string username, bool isWinner)
         {
+            var isNotTwitterUser = username?.StartsWith("$") ?? false;
+            if (_settings.Leaderboard.OnlyTwitter && isNotTwitterUser)
+            {
+                return;
+            }
+
             var loginResult = await Call(
                 PlayFabClientAPI.LoginWithCustomIDAsync,
                 new LoginWithCustomIDRequestBuilder()
@@ -129,6 +140,33 @@ namespace RPSLS.Game.Multiplayer.Services
             await Call(PlayFabServerAPI.UpdatePlayerStatisticsAsync, statsRequestBuilder);
         }
 
+        public async Task<Leaderboard> GetLeaderboard()
+        {
+            var entityToken = await GetEntityToken();
+            var leaderboardResult = await Call(
+                PlayFabServerAPI.GetLeaderboardAsync,
+                new GetLeaderboardRequestBuilder()
+                    .WithTitleContext(_settings.Title, entityToken)
+                    .WithStats(WinsStat)
+                    .WithLimits(0, _settings.Leaderboard.Top));
+
+            var players =  new List<LeaderboardEntry>();
+            foreach (var entry in leaderboardResult.Leaderboard)
+            {
+                var isTwitterUser = !(entry.DisplayName?.StartsWith("$") ?? false);
+                var username = isTwitterUser ? entry.DisplayName : entry.DisplayName.Substring(1);
+                players.Add(new LeaderboardEntry
+                {
+                    Position = entry.Position,
+                    Username = username,
+                    IsTwitterUser = isTwitterUser,
+                    Score = entry.StatValue
+                });
+            }
+
+            return new Leaderboard { Players = players };
+        }
+
         private async Task<EntityKey> GetUserEntity(string username)
         {
             var loginResult = await Call(
@@ -139,27 +177,16 @@ namespace RPSLS.Game.Multiplayer.Services
                     .CreateIfDoesntExist());
 
             var userEntity = loginResult.EntityToken.Entity;
-            if (loginResult.NewlyCreated || loginResult.InfoResultPayload?.AccountInfo?.TitleInfo?.DisplayName != userEntity.Id)
+            if (loginResult.NewlyCreated || loginResult.InfoResultPayload?.AccountInfo?.TitleInfo?.DisplayName != username)
             {
-                // Add a DisplayName to the title user so its easier to retrieve the twitter user;
+                // Add a DisplayName to the title user so its easier to retrieve the user;
                 await Call(
                     PlayFabClientAPI.UpdateUserTitleDisplayNameAsync,
                     new UpdateUserTitleDisplayNameRequestBuilder()
-                        .WithName(userEntity.Id));
+                        .WithName(username));
             }
 
             return userEntity;
-        }
-
-        private async Task<string> GetUsername(string userTitleId)
-        {
-            var getAccountResult = await Call(
-                PlayFabAdminAPI.GetUserAccountInfoAsync,
-                new LookupUserAccountInfoRequestBuilder()
-                    .WithTitleDisplay(userTitleId));
-
-            var username = getAccountResult.UserInfo.CustomIdInfo.CustomId;
-            return username ?? "Unknown";
         }
 
         private async Task EnsureQueueExist()

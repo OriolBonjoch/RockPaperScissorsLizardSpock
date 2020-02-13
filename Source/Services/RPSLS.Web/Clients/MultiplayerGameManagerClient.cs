@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using RPSLS.Web.Config;
 using RPSLS.Web.Models;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -116,6 +117,18 @@ namespace RPSLS.Web.Clients
             }
 
             return false;
+        }
+
+        public async Task<LeaderboardDto> GetLeaderboard()
+        {
+            var channel = GrpcChannel.ForAddress(_serverUrl);
+            var client = new MultiplayerGameManager.MultiplayerGameManagerClient(channel);
+            var leaderboard = await client.LeaderboardAsync(new Empty());
+            return new LeaderboardDto()
+            {
+                Players = leaderboard.Players.Select(
+                    p => new LeaderboardEntryDto { Username = p.Username, Score = p.Score })
+            };
         }
     }
 }

@@ -52,6 +52,7 @@ service MultiplayerGameManager {
 	rpc Pick (PickRequest) returns (Empty);
 	rpc GameStatus (GameStatusRequest) returns (stream GameStatusResponse);
 	rpc Rematch (RematchRequest) returns (stream RematchResponse);
+	rpc Leaderboard (Empty) returns (LeaderboardResponse);
 }
 
 message CreatePairingRequest {
@@ -105,4 +106,14 @@ message RematchRequest {
 message RematchResponse {
 	bool hasStarted = 1;
 	bool isCancelled = 2;
+}
+
+message LeaderboardResponse {
+	repeated LeaderboardEntryResponse players = 1;
+}
+
+message LeaderboardEntryResponse {
+	string username = 1;
+	bool twitterLogged = 2;
+	int32 score = 3;
 }

@@ -179,6 +179,23 @@ namespace RPSLS.Game.Api.GrpcServices
             await responseStream.WriteAsync(new RematchResponse { HasStarted = true });
         }
 
+        public override async Task<LeaderboardResponse> Leaderboard(Empty request, ServerCallContext context)
+        {
+            var leaderboard = await _playFabService.GetLeaderboard();
+            var result = new LeaderboardResponse();
+            foreach (var player in leaderboard.Players)
+            {
+                result.Players.Add(new LeaderboardEntryResponse()
+                {
+                    Username = player.Username,
+                    TwitterLogged = player.IsTwitterUser,
+                    Score = player.Score
+                });
+            }
+
+            return result;
+        }
+
         private static string GetUsername(string username, bool twitterLogged) => twitterLogged ? username : $"${username}";
 
         private static string GetUserDisplay(string username) => 

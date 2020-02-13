@@ -62,6 +62,7 @@
     private async Task JoinMatch()
     {
         await Game.FetchMatchId(Token);
-        NavigationManager.NavigateTo($"/battle/multiplayer/{Game.MatchId}");
+        var redirect = string.IsNullOrWhiteSpace(Game.MatchId) ? "/" : $"/battle/multiplayer/{Game.MatchId}";
+        NavigationManager.NavigateTo(redirect);
     }
 }

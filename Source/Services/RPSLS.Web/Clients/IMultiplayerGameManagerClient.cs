@@ -15,5 +15,7 @@ namespace RPSLS.Web.Clients
         Task<ResultDto> GameStatus(string matchId, string username, bool isTwitterUser, Action<ResultDto> gameListener);
 
         Task<bool> Rematch(string matchId, string username, bool isTwitterUser);
+
+        Task<LeaderboardDto> GetLeaderboard();
     }
 }

@@ -29,6 +29,9 @@ inf:
     php: "app=php-player"
     java: "app=java-player"
 
+multiplayer:
+  onlytwitterleaderboard: true
+
 auth:
   twitter:
     key: {{twitterKey}}

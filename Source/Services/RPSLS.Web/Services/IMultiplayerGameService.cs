@@ -12,5 +12,6 @@ namespace RPSLS.Web.Services
         Task UserPick(int pick);
         Task AddGameListener(Action<ResultDto> gameListener);
         Task<bool> Rematch();
+        Task<LeaderboardDto> GetLeaderboard();
     }
 }
