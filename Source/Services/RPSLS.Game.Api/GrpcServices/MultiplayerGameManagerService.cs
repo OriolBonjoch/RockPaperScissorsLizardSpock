@@ -50,38 +50,52 @@ namespace RPSLS.Game.Api.GrpcServices
         public override async Task CreatePairing(CreatePairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
             var token = _tokenService.GenerateToken();
-            var username = GetUsername(request.Username, request.TwitterLogged);
-            var ticketId = await _playFabService.CreateTicket(username, token);
-            _logger.LogInformation($"New token created for user {username}: {token}");
-            await responseStream.WriteAsync(CreateMatchStatusResponse("TokenCreated", token));
-
-            await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-            var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
-            while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
+            try
             {
-                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token));
-                await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-                matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
-            }
+                var username = GetUsername(request.Username, request.TwitterLogged);
+                var ticketId = await _playFabService.CreateTicket(username, token);
+                _logger.LogInformation($"New token created for user {username}: {token}");
+                await responseStream.WriteAsync(CreateMatchStatusResponse("TokenCreated", token));
 
-            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token, matchResult.MatchId));
-            await _repository.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
+                await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+                var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
+                while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token));
+                    await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+                    matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
+                }
+
+                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, token, matchResult.MatchId));
+                await _repository.CreateMatch(matchResult.MatchId, username, matchResult.Opponent);
+            }
+            catch
+            {
+                await responseStream.WriteAsync(CreateMatchStatusResponse("Canceled", token));
+            }
         }
 
         public override async Task JoinPairing(JoinPairingRequest request, IServerStreamWriter<PairingStatusResponse> responseStream, ServerCallContext context)
         {
-            var username = GetUsername(request.Username, request.TwitterLogged);
-            var ticketId = await _playFabService.CreateTicket(username, request.Token);
-            await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-            var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
-            while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
+            try
             {
-                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token));
+                var username = GetUsername(request.Username, request.TwitterLogged);
+                var ticketId = await _playFabService.CreateTicket(username, request.Token);
                 await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
-                matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
-            }
+                var matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
+                while (!matchResult.Finished && !context.CancellationToken.IsCancellationRequested)
+                {
+                    await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token));
+                    await Task.Delay(_multiplayerSettings.Token.TicketStatusWait);
+                    matchResult = await _playFabService.CheckTicketStatus(username, ticketId);
+                }
 
-            await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token, matchResult.MatchId));
+                await responseStream.WriteAsync(CreateMatchStatusResponse(matchResult.Status, request.Token, matchResult.MatchId));
+            }
+            catch
+            {
+                await responseStream.WriteAsync(CreateMatchStatusResponse("Canceled", request.Token));
+            }
         }
 
         public override async Task GameStatus(GameStatusRequest request, IServerStreamWriter<GameStatusResponse> responseStream, ServerCallContext context)

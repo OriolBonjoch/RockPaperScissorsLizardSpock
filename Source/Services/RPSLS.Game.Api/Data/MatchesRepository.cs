@@ -59,10 +59,9 @@ namespace RPSLS.Game.Api.Data
             if (result != null) return result;
             if (_constr == null) return CreateMissing(matchId);
             var cResponse = await GetContainer();
-            return cResponse.Container.GetItemLinqQueryable<MatchDto>()
-                .Where(m => m.PlayFabMatchId == matchId)
-                .OrderByDescending(m => m.WhenUtc)
-                .FirstOrDefault();
+            var matches = cResponse.Container.GetItemLinqQueryable<MatchDto>(allowSynchronousQueryExecution: true)
+                .Where(m => m.PlayFabMatchId == matchId).ToList();
+            return matches.OrderByDescending(m => m.WhenUtc).FirstOrDefault();
         }
 
         public async Task<MatchDto> SaveMatchChallenger(string matchId, string username)
@@ -119,7 +118,7 @@ namespace RPSLS.Game.Api.Data
             if (_constr == null) return;
 
             var cResponse = await GetContainer();
-            var existing = cResponse.Container.GetItemLinqQueryable<MatchDto>()
+            var existing = cResponse.Container.GetItemLinqQueryable<MatchDto>(allowSynchronousQueryExecution: true)
                 .Where(m => m.PlayFabMatchId == matchId)
                 .FirstOrDefault();
 

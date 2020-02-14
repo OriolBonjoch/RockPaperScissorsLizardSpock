@@ -5,7 +5,7 @@
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IMultiplayerGameService Game
-@inject GameSettingsDto GameSettings
+@inject IOptions<MultiplayerSettings> MultiplayerSettings
 
 <div class="index-content">
     <div class="login">
@@ -17,20 +17,30 @@
                     <h2 class="subtitle">Rock, Paper, Scissors, Lizard, Spock!</h2>
                 </div>
 
-                <input type="hidden" name="redirectUrl" value="@RedirectUrl" />
-                <input type="text" name="username" class="user" placeholder="Type Username" value="@Username" required />
+                @if (IsRedirecting)
+                {
+                    <div class="subtitle-container">
+                        <h2 class="subtitle">HELLO, @Game.Username.ToUpperInvariant()</h2>
+                        <h2 class="subtitle">Entering game</h2>
+                    </div>
+                }
+                else
+                {
+                    <input type="hidden" name="redirectUrl" value="@RedirectUrl" />
+                    <input type="text" name="username" class="user" placeholder="Type Username" required />
 
-                <div class="sign_twitter">
-                    @if (!string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerKey) &&
-                    !string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerSecret))
-                    {
-                        <span>or <a href="/api/account/login/twitter?redirectUrl=@RedirectUrl">Sign in with Twitter</a></span>
-                    }
-                </div>
+                    <div class="sign_twitter">
+                        @if (!string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerKey) &&
+                           !string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerSecret))
+                        {
+                            <span>or <a href="/api/account/login/twitter?redirectUrl=@RedirectUrl">Sign in with Twitter</a></span>
+                        }
+                    </div>
 
-                <div class="custom-button">
-                    <button type="submit" class="custom-button-link">Enter</button>
-                </div>
+                    <div class="custom-button">
+                        <button type="submit" class="custom-button-link">Enter</button>
+                    </div>
+                }
             </form>
         </div>
     </div>
@@ -46,11 +56,11 @@
     public string Token { get; set; }
 
     public string RedirectUrl { get; set; }
-    public string Username { get; set; }
+    public bool IsRedirecting { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        if (!GameSettings.HasMultiplayer)
+        if (!MultiplayerSettings.Value.Enabled)
         {
             NavigationManager.NavigateTo("/");
             return;
@@ -60,7 +70,8 @@
         var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         Game.Username = state.User?.Identity?.Name;
         Game.IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
-        if (state.User.Identity.IsAuthenticated)
+        IsRedirecting = state.User.Identity.IsAuthenticated;
+        if (IsRedirecting)
         {
             _ = JoinMatch();
         }

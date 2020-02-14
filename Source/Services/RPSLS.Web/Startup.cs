@@ -40,11 +40,13 @@ namespace RPSLS.Web
             services.Configure<GoogleAnalyticsSettings>(Configuration);
             services.Configure<TwitterOptions>(Configuration.GetSection("Authentication:Twitter"));
             services.Configure<GameManagerSettings>(Configuration.GetSection("GameManager"));
+            services.ConfigureOptions<MultiplayerSettingsOptions>();
             if (Configuration.GetValue<bool>("GameManager:Grpc:GrpcOverHttp", false))
             {
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
                 AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
             }
+
 
             services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
             services.AddScoped<IBotGameManagerClient, BotGameManagerClient>();

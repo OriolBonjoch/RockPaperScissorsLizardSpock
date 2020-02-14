@@ -4,16 +4,12 @@
 @inject IOptions<TwitterOptions> TwitterOptions
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject GameSettingsDto GameSettings
+@inject IOptions<MultiplayerSettings> MultiplayerSettings
 
 <div class="index-content">
     <div class="login">
         <div class="login-section">
-            <div class="leaderboard-link">
-                <img src="/assets/images/png/astronaut.png">
-                <span>don't miss</span>
-                <a href="/leaderboard">THE LEADERBOARD</a>
-            </div>
+            <RPSLS.Web.Components.LeaderboardLink MultiplayerSettings="MultiplayerSettings.Value" />
             <form>
                 <img src="/assets/images/png/logo.png">
                 <div class="subtitle-container">
@@ -43,7 +39,7 @@
                     <div class="custom-button">
                         <button type="button" @onclick="PlayAgainstBots" class="custom-button-link">Play with a bot</button>
                     </div>
-                    @if (GameSettings.HasMultiplayer)
+                    @if (MultiplayerSettings.Value.Enabled)
                     {
                         <div class="custom-button">
                             <button type="button" @onclick="PlayAgainstHumans" class="custom-button-link">Play with a friend</button>
