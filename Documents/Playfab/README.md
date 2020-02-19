@@ -1,26 +1,3 @@
----
-page_type: sample
-name: "Rock, Paper, Scissors, Lizard, Spock"
-urlFragment: azure-rock-paper-scissors
-description: "Rock, Paper, Scissors, Lizard, Spock is the geek version of the classic Rock, Paper, Scissors game."
-languages:
-- csharp
-- powershell
-- html
-- php
-- python
-- javascript
-- java
-products:
-- azure-cosmos-db
-- azure-kubernetes-service
-- dotnet-core
-- azure-cognitive-services
-- vs
-- vs-code
-azureDeploy: https://github.com/microsoft/RockPaperScissorsLizardSpock/blob/master/Deploy/arm/deployment.json
----
-
 # Rock, Paper, Scissors, Lizard, Spock - Sample Multiplayer Application
 
 Now you can enhance the game to play with a friend with the help of [Playfab platform](https://playfab.com/).
