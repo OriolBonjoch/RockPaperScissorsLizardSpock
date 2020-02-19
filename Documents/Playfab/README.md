@@ -4,7 +4,7 @@ Now you can enhance the game to play with a friend with the help of [Playfab pla
 Playfab platform will be used only for the matchmaking queue logic and the leaderboard score.
 
 ## Setup
-In order to support playfab you will need a platfab account with a game created (title in playfab)
+In order to support playfab you will need a playfab account with a game created (title in playfab)
 
 1. Create a new Playfab account in the [sign up page](https://developer.playfab.com/en-us/sign-up) or if you already have one log in with it.
 2. With the account creation as developer it creates a Title by default, if not create a new title. We named it RPSLS.
