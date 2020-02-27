@@ -1,33 +1,10 @@
----
-page_type: sample
-name: "Rock, Paper, Scissors, Lizard, Spock"
-urlFragment: azure-rock-paper-scissors
-description: "Rock, Paper, Scissors, Lizard, Spock is the geek version of the classic Rock, Paper, Scissors game."
-languages:
-- csharp
-- powershell
-- html
-- php
-- python
-- javascript
-- java
-products:
-- azure-cosmos-db
-- azure-kubernetes-service
-- dotnet-core
-- azure-cognitive-services
-- vs
-- vs-code
-azureDeploy: https://github.com/microsoft/RockPaperScissorsLizardSpock/blob/master/Deploy/arm/deployment.json
----
-
 # Rock, Paper, Scissors, Lizard, Spock - Sample Multiplayer Application
 
 Now you can enhance the game to play with a friend with the help of [Playfab platform](https://playfab.com/).
 Playfab platform will be used only for the matchmaking queue logic and the leaderboard score.
 
 ## Setup
-In order to support playfab you will need a platfab account with a game created (title in playfab)
+In order to support playfab you will need a playfab account with a game created (title in playfab)
 
 1. Create a new Playfab account in the [sign up page](https://developer.playfab.com/en-us/sign-up) or if you already have one log in with it.
 2. With the account creation as developer it creates a Title by default, if not create a new title. We named it RPSLS.
