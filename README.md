@@ -181,6 +181,14 @@ The KeyVault support is implemented through [FlexVol](https://github.com/Azure/k
 ```
 .\Create-Kv-FlexVolume.ps1
 ```
+#### Publish Python Azure Function
+
+To publish the Azure Function you can execute the next command of the Azure Functions Core Tools:
+```
+func azure functionapp publish <funcapp-name> --no-build
+```
+The value for `funcapp-name` must be the name of the Function App created in your Azure Resource Group.
+
 #### Configuring services
 
 Before deploying services using Helm, you need to setup the configuration. We refer to the configuration file with the name of _gvalues_ file. This file **contains all secrets** so beware to not commit in your repo accidentally.
@@ -197,7 +205,7 @@ Generating a valid _gvalues_ file can be a bit harder, so there is a Powershell 
 
 > **Note** The Generate-Config.ps1 uses the _application-insights_ CLI extension to find the application insights id. Install it with `az extension add --name application-insights`
 
-> **Note** The configuration script requires the Azure function key so internal aks services can call it. So before executing the Generate-Config.ps1 make sure that the function is already published and the function key exists. One option to publish the function is to execute the command `func azure functionapp publish <funcapp-name> --no-build` from the folder `/Source/Functions/RPSLS.Python.Api`. The value funcapp-name must be the name of the Function App in your Azure Resource Group.
+> **Note** The configuration script requires the Azure function key so internal aks services can call it. So before executing the Generate-Config.ps1 make sure that the function is already published and the function key exists. 
 
 To auto-generate your _gvalues_ file just go to `/Deploy/powershell` folder and from a Powershell window, type the following:
 
