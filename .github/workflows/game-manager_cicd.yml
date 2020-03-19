@@ -1,6 +1,6 @@
 # Game Manager Workflow
 
-name: Game Manager 
+name: Game Manager
 
 on: 
   push:
