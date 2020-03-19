@@ -1,6 +1,6 @@
 # Python Player Workflow
 
-name: PythonPlayer
+name: PythonPlayer 
 
 on: 
   push:

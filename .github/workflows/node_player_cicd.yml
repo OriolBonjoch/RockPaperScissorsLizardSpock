@@ -1,6 +1,6 @@
 # Node Player Workflow
 
-name: NodePlayer
+name: NodePlayer 
 
 on: 
   push:
