@@ -1,6 +1,6 @@
 # Web Workflow
 
-name: Web 
+name: Web
 
 on: 
   push:
