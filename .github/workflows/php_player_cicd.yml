@@ -1,6 +1,6 @@
 # Php Player Workflow
 
-name: PhpPlayer 
+name: PhpPlayer
 
 on: 
   push:
