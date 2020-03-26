@@ -128,7 +128,7 @@ namespace RPSLS.Game.Multiplayer.Services
             var loginResult = await Call(
                 PlayFabClientAPI.LoginWithCustomIDAsync,
                 new LoginWithCustomIDRequestBuilder()
-                    .WithUser(username.ToUpper())
+                    .WithUser(username.ToUpperInvariant())
                     .WithAccountInfo()
                     .CreateIfDoesntExist());
 
@@ -187,7 +187,7 @@ namespace RPSLS.Game.Multiplayer.Services
                 await Call(
                     PlayFabClientAPI.UpdateUserTitleDisplayNameAsync,
                     new UpdateUserTitleDisplayNameRequestBuilder()
-                        .WithName(username));
+                        .WithName(username.ToUpperInvariant()));
             }
 
             return userEntity;
