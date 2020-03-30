@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using RPSLS.Web.Models;
-using RPSLS.Web.Services;
+using RPSLS.SPA.Server.Services;
+using RPSLS.SPA.Shared.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -29,16 +29,17 @@ namespace RPSLS.SPA.Server.Controllers
         [ProducesResponseType(typeof(IEnumerable<ChallengerDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<ChallengerDto>>> Challengers()
         {
-            var botChallengers = _botGameService.Challengers();
+            var botChallengers = await _botGameService.Challengers();
             return Ok(botChallengers);
         }
 
         [HttpPut]
         [Route("challenger")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public void SetChallenger(ChallengerDto challenger)
+        public StatusCodeResult SetChallenger(ChallengerDto challenger)
         {
-            // setear el challenger escogido
+            _botGameService.SetChallenger(challenger);
+            return StatusCode(StatusCodes.Status204NoContent);
         }
     }
 }

@@ -1,13 +1,23 @@
+using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+using RPSLS.SPA.Server.Clients;
+using RPSLS.SPA.Server.Config;
+using RPSLS.SPA.Server.Services;
+using System;
+using System.Linq;
 
 namespace RPSLS.SPA.Server
 {
     public class Startup
     {
+        private readonly string _apiVersion = "v1";
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -15,15 +25,45 @@ namespace RPSLS.SPA.Server
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllersWithViews();
+
+            services.AddSwaggerGen(options => {
+                options.SwaggerDoc(_apiVersion, new OpenApiInfo
+                {
+                    Title = "Rock Paper Scissors Lizard Spock - Web BFF HTTP API",
+                    Version = "v1"
+                });
+            });
+
+            services.AddOptions();
+            services.Configure<RecognitionSettings>(Configuration);
+            services.Configure<GoogleAnalyticsSettings>(Configuration);
+            services.Configure<TwitterOptions>(Configuration.GetSection("Authentication:Twitter"));
+            services.Configure<GameManagerSettings>(Configuration.GetSection("GameManager"));
+            services.ConfigureOptions<MultiplayerSettingsOptions>();
+            if (Configuration.GetValue<bool>("GameManager:Grpc:GrpcOverHttp", false))
+            {
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+                AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2Support", true);
+            }
+
+            //services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
+            services.AddScoped<IBotGameManagerClient, BotGameManagerClient>();
+            services.AddScoped<IMultiplayerGameManagerClient, MultiplayerGameManagerClient>();
+            services.AddScoped<IConfigurationManagerClient, ConfigurationManagerClient>();
+            services.AddScoped<IBotGameService, BotGameService>();
+            services.AddScoped<IMultiplayerGameService, MultiplayerGameService>();
+            //services.AddScoped<SvgHelper>();
+            //services.AddScoped<BattleHelper>();
+
+            services.AddSingleton(sp =>
+            {
+                return sp.GetService<IConfigurationManagerClient>().GetSettings();
+            });
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -38,6 +78,13 @@ namespace RPSLS.SPA.Server
                 app.UseHsts();
             }
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint($"/swagger/{_apiVersion}/swagger.json", "Rock Paper Scissors Lizard Spock - Web BFF HTTP API");
+            });
+
+
             app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
@@ -49,6 +96,7 @@ namespace RPSLS.SPA.Server
                 endpoints.MapControllers();
                 endpoints.MapFallbackToFile("index.html");
             });
+
         }
     }
 }
