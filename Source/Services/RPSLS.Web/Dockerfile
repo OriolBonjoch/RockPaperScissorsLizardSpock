@@ -9,11 +9,11 @@ EXPOSE 80
 
 FROM ${sdkImage}:${sdkTag} AS build
 WORKDIR /src/project
-COPY . .
-RUN dotnet build "./Server/RPSLS.Web.csproj" -c Release -o /app
+COPY ./RPSLS.Web .
+RUN dotnet build "RPSLS.Web.csproj" -c Release -o /app
 
 FROM build AS publish
-RUN dotnet publish "./Server/RPSLS.Web.csproj" -c Release -o /app
+RUN dotnet publish "RPSLS.Web.csproj" -c Release -o /app
 
 FROM base AS final
 WORKDIR /app
