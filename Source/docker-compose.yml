@@ -49,10 +49,3 @@ services:
     build:
       context: ./Services/
       dockerfile: RPSLS.ModelUploader.Web/Dockerfile
-  spa:
-    image: ${REGISTRY:-msftrpsls}/spa:${TAG:-latest}
-    build:
-      context: ./Web/RPSLS.SPA/
-      dockerfile: Server/Dockerfile
-    depends_on:
-      - game.api
