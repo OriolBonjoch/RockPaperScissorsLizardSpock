@@ -1,15 +1,14 @@
 ﻿@layout MainLayout
 @page "/"
 
-@using RPSLS.SPA.Shared.Config
 @inject HttpClient Http
+@inject NavigationManager NavigationManager
 
-@*@inject IOptions<TwitterOptions> TwitterOptions
+@*
     @inject NavigationManager NavigationManager
     @inject AuthenticationStateProvider AuthenticationStateProvider
     @inject IHttpContextAccessor HttpContextAccessor
-
-    @inject IOptions<MultiplayerSettings> MultiplayerSettings*@
+*@
 
 <div class="index-content">
     <div class="login">
@@ -17,9 +16,9 @@
             <div class="header-layout">
                 <div class="header-layout-item"></div>
                 <div class="header-layout-item header-layout-item--large"></div>
-                @*<div class="header-layout-item">
-                        <RPSLS.Web.Components.LeaderboardLink MultiplayerSettings="MultiplayerSettings.Value" />
-                    </div>*@
+                <div class="header-layout-item">
+                    <LeaderboardLink AppSettings="AppSettings" />
+                </div>
             </div>
             <form>
                 <img class="logo" src="/assets/images/png/logo.png">
@@ -32,17 +31,17 @@
                 {
                     <input @bind-value="@CustomUsername" @bind-value:event="oninput" class="user" type="text" placeholder="Type Username" required />
 
-                    @*<div class="sign_twitter">
-                            @if (!string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerKey) && !string.IsNullOrWhiteSpace(TwitterOptions?.Value?.ConsumerSecret))
-                            {
-                                <span>or <a href="/api/account/login/twitter">Sign in with Twitter</a></span>
-                            }
-                        </div>*@
+                    <div class="sign_twitter">
+                        @if (AppSettings.TwitterEnabled)
+                        {
+                            <span>or <a href="/api/account/login/twitter">Sign in with Twitter</a></span>
+                        }
+                    </div>
                 }
                 else
                 {
                     <div class="subtitle-container">
-                        <h2 class="subtitle" @onclick="Logout">HELLO, @Username.ToUpperInvariant()</h2>
+                        <h2 class="subtitle">HELLO, @Username.ToUpperInvariant()</h2>
                     </div>
                 }
 
@@ -50,12 +49,12 @@
                     <div class="custom-button @(UserNameIsEmpty? "custom-button-disabled" : "")">
                         <button type="button" @onclick="PlayAgainstBots" class="custom-button-link" disabled="@UserNameIsEmpty">Play with a bot</button>
                     </div>
-                    @if (MultiplayerSettings.Enabled)
-                        {
-                            <div class="custom-button @(UserNameIsEmpty? "custom-button-disabled" : "")">
-                                <button type="button" @onclick="PlayAgainstHumans" class="custom-button-link" disabled="@UserNameIsEmpty">Play with a friend</button>
-                            </div>
-                        }
+                    @if (AppSettings.MultiplayerEnabled)
+                    {
+                        <div class="custom-button @(UserNameIsEmpty? "custom-button-disabled" : "")">
+                            <button type="button" @onclick="PlayAgainstHumans" class="custom-button-link" disabled="@UserNameIsEmpty">Play with a friend</button>
+                        </div>
+                    }
                 </div>
             </form>
         </div>
@@ -71,7 +70,7 @@
 @code
 {
     private string CustomUsername { get; set; }
-    private MultiplayerSettings MultiplayerSettings { get; set; } = new MultiplayerSettings();
+    private AppSettings AppSettings { get; set; } = new AppSettings();
 
     [Parameter]
     public string RedirectUrl { get; set; }
@@ -83,7 +82,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        MultiplayerSettings = await Http.GetJsonAsync<MultiplayerSettings>("Settings");
+        AppSettings = await Http.GetJsonAsync<AppSettings>("Settings");
 
         //var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         //Username = state.User?.Identity?.Name ?? string.Empty;
@@ -102,27 +101,20 @@
         if (!string.IsNullOrWhiteSpace(CustomUsername))
             Username = CustomUsername;
 
-        if (!string.IsNullOrWhiteSpace(Username))
-        {
-            var uri = redirect;
-            if (!IsTwitterUser)
-            {
-                var encodedUsername = System.Web.HttpUtility.UrlEncode(Username);
-                var encodedRedirect = System.Web.HttpUtility.UrlEncode(redirect);
-                uri = $"/api/account/login?username={encodedUsername}&redirectUrl={encodedRedirect}";
-            }
+        //if (!string.IsNullOrWhiteSpace(Username))
+        //{
+        //    var uri = redirect;
+        //    if (!IsTwitterUser)
+        //    {
+        //        var encodedUsername = System.Web.HttpUtility.UrlEncode(Username);
+        //        var encodedRedirect = System.Web.HttpUtility.UrlEncode(redirect);
+        //        uri = $"/api/account/login?username={encodedUsername}&redirectUrl={encodedRedirect}";
+        //    }
 
-            //NavigationManager.NavigateTo(uri, true);
-        }
+        //    NavigationManager.NavigateTo(uri, true);
+        //}
+
+        NavigationManager.NavigateTo(redirect);
     }
 
-    private void Logout()
-    {
-        if (!string.IsNullOrWhiteSpace(Username))
-        {
-
-        }
-
-        //NavigationManager.NavigateTo("/", true);
-    }
 }

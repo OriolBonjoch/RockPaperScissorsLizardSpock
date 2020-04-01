@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DisableImplicitComponentsAnalyzers>true</DisableImplicitComponentsAnalyzers>
+    <UserSecretsId>097aebde-7a50-4fbd-a170-d3beaa40e9ad</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

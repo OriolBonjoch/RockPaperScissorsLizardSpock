@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using RPSLS.SPA.Server.Clients;
-using RPSLS.SPA.Shared.Config;
 
 namespace RPSLS.SPA.Server.Config
 {
@@ -19,5 +18,10 @@ namespace RPSLS.SPA.Server.Config
             options.Enabled = gameApiSettingsClient.HasMultiplayer;
         }
     }
-  
+
+    public class MultiplayerSettings
+    {
+        public bool Enabled { get; set; } = false;
+    }
+
 }
