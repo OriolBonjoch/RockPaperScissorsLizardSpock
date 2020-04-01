@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Twitter;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,7 +9,6 @@ using RPSLS.SPA.Server.Clients;
 using RPSLS.SPA.Server.Config;
 using RPSLS.SPA.Server.Services;
 using System;
-using System.Linq;
 
 namespace RPSLS.SPA.Server
 {
@@ -27,9 +25,11 @@ namespace RPSLS.SPA.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
             services.AddControllersWithViews();
 
-            services.AddSwaggerGen(options => {
+            services.AddSwaggerGen(options =>
+            {
                 options.SwaggerDoc(_apiVersion, new OpenApiInfo
                 {
                     Title = "Rock Paper Scissors Lizard Spock - Web BFF HTTP API",
@@ -52,7 +52,7 @@ namespace RPSLS.SPA.Server
             //services.AddScoped<AuthenticationStateProvider, CookieAuthenticationStateProvider>();
             services.AddScoped<IBotGameManagerClient, BotGameManagerClient>();
             services.AddScoped<IMultiplayerGameManagerClient, MultiplayerGameManagerClient>();
-            services.AddScoped<IConfigurationManagerClient, ConfigurationManagerClient>();
+            services.AddSingleton<IConfigurationManagerClient, ConfigurationManagerClient>();
             services.AddScoped<IBotGameService, BotGameService>();
             services.AddScoped<IMultiplayerGameService, MultiplayerGameService>();
             //services.AddScoped<SvgHelper>();
@@ -85,7 +85,7 @@ namespace RPSLS.SPA.Server
             });
 
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseBlazorFrameworkFiles();
             app.UseStaticFiles();
 

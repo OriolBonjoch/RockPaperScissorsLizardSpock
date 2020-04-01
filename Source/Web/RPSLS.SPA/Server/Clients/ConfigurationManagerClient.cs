@@ -26,10 +26,6 @@ namespace RPSLS.SPA.Server.Clients
                 HasMultiplayer = result.HasMultiplayer
             };
         }
-
-        GameSettingsDto IConfigurationManagerClient.GetSettings()
-        {
-            throw new NotImplementedException();
-        }
+     
     }
 }
