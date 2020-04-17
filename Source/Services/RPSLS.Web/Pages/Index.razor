@@ -25,8 +25,8 @@
                     <h2 class="subtitle">The geek version of rock-paper-scissors.</h2>
                     <h2 class="subtitle">Play with a friend or try to defeat our bot!</h2>
                     <p class="info-contest">
-                        April 17th - May 15th, play to get to a chance to win awesome prizes. 
-                        <a href="/assets/pdfs/RPSLS_Rules.pdf" target="_blank">See Rules</a> 
+                        April 17th - May 15th, play to get to a chance to win awesome prizes.
+                        <a href="/assets/pdfs/RPSLS_Rules.pdf" target="_blank">See Rules</a>
                         for more information.
                     </p>
                 </div>
@@ -49,7 +49,7 @@
                     </div>
                 }
 
-                <div class="custom-button-container" >
+                <div class="custom-button-container">
                     <div class="custom-button @(UserNameIsEmpty? "custom-button-disabled" : "")">
                         <button type="button" @onclick="PlayAgainstBots" class="custom-button-link" disabled="@UserNameIsEmpty">Play with a bot</button>
                     </div>
@@ -85,13 +85,13 @@
 
     protected override async Task OnInitializedAsync()
     {
-      var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-      Username = state.User?.Identity?.Name ?? string.Empty;
-      IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
-      if (!string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(RedirectUrl))
-      {
-    NavigationManager.NavigateTo(RedirectUrl);
-      }
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        Username = state.User?.Identity?.Name ?? string.Empty;
+        IsTwitterUser = state.User.Identity.AuthenticationType == TwitterDefaults.AuthenticationScheme;
+        if (!string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(RedirectUrl))
+        {
+            NavigationManager.NavigateTo(RedirectUrl);
+        }
     }
 
     protected void PlayAgainstBots() => Play("/challenger");
@@ -99,30 +99,30 @@
 
     private void Play(string redirect)
     {
-      if (!string.IsNullOrWhiteSpace(CustomUsername))
-    Username = CustomUsername;
+        if (!string.IsNullOrWhiteSpace(CustomUsername))
+            Username = CustomUsername;
 
-      if (!string.IsNullOrWhiteSpace(Username))
-      {
-    var uri = redirect;
-    if (!IsTwitterUser)
-    {
-      var encodedUsername = System.Web.HttpUtility.UrlEncode(Username);
-      var encodedRedirect = System.Web.HttpUtility.UrlEncode(redirect);
-      uri = $"/api/account/login?username={encodedUsername}&redirectUrl={encodedRedirect}";
-    }
+        if (!string.IsNullOrWhiteSpace(Username))
+        {
+            var uri = redirect;
+            if (!IsTwitterUser)
+            {
+                var encodedUsername = System.Web.HttpUtility.UrlEncode(Username);
+                var encodedRedirect = System.Web.HttpUtility.UrlEncode(redirect);
+                uri = $"/api/account/login?username={encodedUsername}&redirectUrl={encodedRedirect}";
+            }
 
-    NavigationManager.NavigateTo(uri, true);
-      }
+            NavigationManager.NavigateTo(uri, true);
+        }
     }
 
     private void Logout()
     {
-      if (!string.IsNullOrWhiteSpace(Username))
-      {
+        if (!string.IsNullOrWhiteSpace(Username))
+        {
 
-      }
+        }
 
-      NavigationManager.NavigateTo("/", true);
+        NavigationManager.NavigateTo("/", true);
     }
 }
