@@ -52,11 +52,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-      this.Board = new LeaderboardDto
-      {
-    Players = new List<LeaderboardEntryDto>()
-      };
+        this.Board = new LeaderboardDto
+        {
+            Players = new List<LeaderboardEntryDto>()
+        };
 
-      this.Board = await Game.GetLeaderboard();
+        this.Board = await Game.GetLeaderboard();
     }
 }
